@@ -36,3 +36,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+/group-buy-market-ywz-app/src/main/resources/application-dev.yml
+/group-buy-market-ywz-app/src/main/resources/application-prod.yml
+/group-buy-market-ywz-app/src/main/resources/application-test.yml
