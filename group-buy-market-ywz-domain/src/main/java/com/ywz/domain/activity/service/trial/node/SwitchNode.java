@@ -7,6 +7,11 @@ import com.ywz.domain.activity.service.trial.factory.DefaultActivityStrategyFact
 import com.ywz.types.design.framework.tree.StrategyHandler;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeoutException;
+
 /**
  * @author 于汶泽
  * @Description: 开关节点
@@ -14,13 +19,21 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class SwitchNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
+    @Resource
+    private MarketNode marketNode;
+
     @Override
-    public TrialBalanceEntity apply(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
-        return null;
+    public TrialBalanceEntity doApply(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
+        return router(requestParameter, dynamicContext);
     }
 
     @Override
     public StrategyHandler<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> get(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
-        return null;
+        return marketNode;
+    }
+
+    @Override
+    protected void multiThread(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws ExecutionException, InterruptedException, TimeoutException {
+
     }
 }

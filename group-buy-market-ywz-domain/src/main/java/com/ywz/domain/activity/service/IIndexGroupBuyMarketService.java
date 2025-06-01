@@ -9,12 +9,7 @@ import com.ywz.domain.activity.model.entity.TrialBalanceEntity;
  * @DateTime: 2025/6/1 15:33
  */
 public interface IIndexGroupBuyMarketService {
-    /**
-     * 获取试算结果
-     *
-     * @param marketProductEntity 市场产品实体
-     * @return 试算结果实体
-     * @throws Exception 异常
-     */
-    TrialBalanceEntity getTrialBalance(MarketProductEntity marketProductEntity) throws Exception;
+
+
+    TrialBalanceEntity indexMarketTrial(MarketProductEntity marketProductEntity) throws Exception;
 }

@@ -2,12 +2,11 @@ package com.ywz.domain.activity.service.trial.factory;
 
 import com.ywz.domain.activity.model.entity.MarketProductEntity;
 import com.ywz.domain.activity.model.entity.TrialBalanceEntity;
+import com.ywz.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
+import com.ywz.domain.activity.model.valobj.SkuVO;
 import com.ywz.domain.activity.service.trial.node.RootNode;
 import com.ywz.types.design.framework.tree.StrategyHandler;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.stereotype.Component;
 
 /**
@@ -31,7 +30,11 @@ public class DefaultActivityStrategyFactory {
     @Getter
     @Setter
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class DynamicContext {
         // 可以添加动态上下文的属性和方法
+
+        private GroupBuyActivityDiscountVO groupBuyActivityDiscountVO;
+        private SkuVO skuVO;
     }
 }

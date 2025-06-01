@@ -21,9 +21,6 @@ public class ThreadPoolConfig {
         // 实例化策略
         RejectedExecutionHandler handler;
         switch (properties.getPolicy()){
-            case "AbortPolicy":
-                handler = new ThreadPoolExecutor.AbortPolicy();
-                break;
             case "DiscardPolicy":
                 handler = new ThreadPoolExecutor.DiscardPolicy();
                 break;
@@ -33,6 +30,7 @@ public class ThreadPoolConfig {
             case "CallerRunsPolicy":
                 handler = new ThreadPoolExecutor.CallerRunsPolicy();
                 break;
+            case "AbortPolicy":
             default:
                 handler = new ThreadPoolExecutor.AbortPolicy();
                 break;
