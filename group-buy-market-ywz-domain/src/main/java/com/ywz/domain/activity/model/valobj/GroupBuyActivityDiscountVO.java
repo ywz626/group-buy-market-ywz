@@ -79,6 +79,9 @@ public class GroupBuyActivityDiscountVO {
      */
     private String tagScope;
 
+    /**
+     * 折扣信息
+     */
     @Getter
     @Builder
     @AllArgsConstructor
@@ -97,7 +100,7 @@ public class GroupBuyActivityDiscountVO {
         /**
          * 折扣类型（0:base、1:tag）
          */
-        private Byte discountType;
+        private DiscountTypeEnum discountType;
 
         /**
          * 营销优惠计划（ZJ:直减、MJ:满减、N元购）

@@ -1,7 +1,9 @@
 package com.ywz.infrastructure.dao.po;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.ywz.domain.activity.model.valobj.DiscountTypeEnum;
 import lombok.Data;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
@@ -42,7 +44,8 @@ public class GroupBuyDiscountPO {
     /**
      * 折扣类型（0:base、1:tag）
      */
-    private Byte discountType;
+    @TableField(value = "discount_type")
+    private DiscountTypeEnum discountType;
 
     /**
      * 营销优惠计划（ZJ:直减、MJ:满减、N元购）

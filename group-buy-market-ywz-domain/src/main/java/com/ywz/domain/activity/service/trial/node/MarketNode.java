@@ -6,6 +6,7 @@ import com.ywz.domain.activity.model.entity.MarketProductEntity;
 import com.ywz.domain.activity.model.entity.TrialBalanceEntity;
 import com.ywz.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
 import com.ywz.domain.activity.model.valobj.SkuVO;
+import com.ywz.domain.activity.service.discount.IDiscountCalculateService;
 import com.ywz.domain.activity.service.trial.AbstractGroupBuyMarketSupport;
 import com.ywz.domain.activity.service.trial.factory.DefaultActivityStrategyFactory;
 import com.ywz.domain.activity.service.trial.thread.QueryGroupBuyActivityDiscountVOThreadTask;
@@ -15,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -30,10 +33,21 @@ public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
     private EndNode endNode;
     @Resource
     private ThreadPoolExecutor threadPoolExecutor;
+    @Resource
+    private Map<String, IDiscountCalculateService> discountCalculateServiceMap;
 
     @Override
     public TrialBalanceEntity doApply(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         log.info("拼团商品查询试算服务-MarketNode userId:{} requestParameter:{}", requestParameter.getUserId(), JSON.toJSONString(requestParameter));
+        GroupBuyActivityDiscountVO.GroupBuyDiscount groupBuyDiscount = dynamicContext.getGroupBuyActivityDiscountVO().getGroupBuyDiscount();
+        IDiscountCalculateService iDiscountCalculateService = discountCalculateServiceMap.get(groupBuyDiscount.getMarketPlan());
+        if (iDiscountCalculateService == null) {
+            throw new IllegalArgumentException("不支持的营销优惠类型: " + groupBuyDiscount.getMarketPlan());
+        }
+        SkuVO skuVO = dynamicContext.getSkuVO();
+        // 执行营销优惠计算
+        BigDecimal deductionPrice = iDiscountCalculateService.calculate(requestParameter.getUserId(), skuVO.getOriginalPrice(), groupBuyDiscount);
+        dynamicContext.setDeductionPrice(deductionPrice);
 
         return router(requestParameter, dynamicContext);
     }

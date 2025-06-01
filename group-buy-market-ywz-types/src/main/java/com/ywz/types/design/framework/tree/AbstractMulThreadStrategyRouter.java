@@ -2,7 +2,7 @@ package com.ywz.types.design.framework.tree;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 多线程异步加载数据策略
  * @DateTime: 2025/6/1 17:33
  */
 public abstract class AbstractMulThreadStrategyRouter<T, D, R> implements StrategyMapper<T, D, R>, StrategyHandler<T, D, R> {

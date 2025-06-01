@@ -9,6 +9,8 @@ import com.ywz.types.design.framework.tree.StrategyHandler;
 import lombok.*;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 /**
  * @author 于汶泽
  * @Description: 活动策略工厂
@@ -36,5 +38,6 @@ public class DefaultActivityStrategyFactory {
 
         private GroupBuyActivityDiscountVO groupBuyActivityDiscountVO;
         private SkuVO skuVO;
+        private BigDecimal deductionPrice;
     }
 }

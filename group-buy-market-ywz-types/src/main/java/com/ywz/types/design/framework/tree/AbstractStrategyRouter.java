@@ -2,7 +2,7 @@ package com.ywz.types.design.framework.tree;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 单线程策略路由器
  * @DateTime: 2025/6/1 15:08
  */
 public abstract class AbstractStrategyRouter<T,D,R> implements StrategyMapper<T, D, R>, StrategyHandler<T, D, R>{
