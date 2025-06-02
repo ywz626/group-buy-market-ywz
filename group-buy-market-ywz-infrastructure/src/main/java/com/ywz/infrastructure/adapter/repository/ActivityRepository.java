@@ -14,8 +14,10 @@ import com.ywz.infrastructure.dao.po.GroupBuyActivityPO;
 import com.ywz.infrastructure.dao.po.GroupBuyDiscountPO;
 import com.ywz.infrastructure.dao.po.ScSkuActivity;
 import com.ywz.infrastructure.dao.po.Sku;
+import com.ywz.infrastructure.redis.IRedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
+import org.redisson.api.RBitSet;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -39,6 +41,8 @@ public class ActivityRepository implements IActivityRepository {
     private ISkuDao skuDao;
     @Resource
     private IScSkuActivityDao scSkuActivityDao;
+    @Resource
+    private IRedisService redisService;
 
     @Override
     public GroupBuyActivityDiscountVO queryGroupBuyActivityDiscountVO(String source, String channel) {
@@ -98,5 +102,16 @@ public class ActivityRepository implements IActivityRepository {
                 .goodsName(sku.getGoodsName())
                 .originalPrice(sku.getOriginalPrice())
                 .build();
+    }
+
+    @Override
+    public boolean isTagCrowdRange(String tagId, String userId) {
+        RBitSet bitSet = redisService.getBitSet(tagId);
+        if(bitSet == null){
+            // 如果BitSet不存在，说明该标签没有用户，直接返回true
+            return true;
+        }
+        // 检查用户ID是否在BitSet中
+        return bitSet.get(redisService.getIndexFromUserId(userId));
     }
 }

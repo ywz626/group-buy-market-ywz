@@ -10,6 +10,7 @@ import com.ywz.domain.activity.service.trial.factory.DefaultActivityStrategyFact
 import com.ywz.types.design.framework.tree.StrategyHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
@@ -18,7 +19,7 @@ import java.math.BigDecimal;
  * @Description: 结束节点 负责拼接数据
  * @DateTime: 2025/6/1 15:24
  */
-@Component
+@Service
 @Slf4j
 public class EndNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
     @Override
@@ -38,8 +39,8 @@ public class EndNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
                 .targetCount(groupBuyActivityDiscountVO.getTarget())
                 .startTime(groupBuyActivityDiscountVO.getStartTime())
                 .endTime(groupBuyActivityDiscountVO.getEndTime())
-                .isVisible(false)
-                .isEnable(false)
+                .isVisible(dynamicContext.isVisible())
+                .isEnable(dynamicContext.isEnable())
                 .build();
     }
 

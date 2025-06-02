@@ -1,11 +1,14 @@
 package com.ywz.domain.activity.model.valobj;
 
+import com.ywz.types.common.Constants;
+import jodd.util.StringUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * @author 于汶泽
@@ -78,6 +81,29 @@ public class GroupBuyActivityDiscountVO {
      * 人群标签规则范围
      */
     private String tagScope;
+
+
+    public boolean isValid() {
+        if(StringUtil.isBlank(this.tagScope)){
+            return TagScopeEnumVO.VISIBLE.getAllow();
+        }
+        String[] split = this.tagScope.split(Constants.SPLIT);
+        if(split.length>0 && Objects.equals(split[0],"1")){
+            return TagScopeEnumVO.VISIBLE.getRefuse();
+        }
+        return TagScopeEnumVO.VISIBLE.getAllow();
+    }
+
+    public boolean isEnabled(){
+        if(StringUtil.isBlank(this.tagScope)){
+            return TagScopeEnumVO.ENABLE.getAllow();
+        }
+        String[] split = this.tagScope.split(Constants.SPLIT);
+        if(split.length == 2 && Objects.equals(split[1],"2")){
+            return TagScopeEnumVO.ENABLE.getRefuse();
+        }
+        return TagScopeEnumVO.ENABLE.getAllow();
+    }
 
     /**
      * 折扣信息

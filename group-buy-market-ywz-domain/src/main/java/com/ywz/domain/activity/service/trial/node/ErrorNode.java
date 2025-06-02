@@ -9,14 +9,15 @@ import com.ywz.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import com.ywz.types.enums.ResponseCode;
+import org.springframework.stereotype.Service;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 统一异常节点
  * @DateTime: 2025/6/2 16:28
  */
 @Slf4j
-@Component
+@Service
 public class ErrorNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
 
     @Override

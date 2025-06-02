@@ -28,4 +28,11 @@ public interface IActivityRepository {
      */
     SkuVO querySkuByGoodsId(String goodsId);
 
+    /**
+     * 判断人群标签是否在拼团活动范围内
+     * @param tagId 人群标签ID
+     * @param userId 用户ID
+     * @return true 如果在拼团活动范围内，false 如果不在范围内
+     */
+    boolean isTagCrowdRange(String tagId, String userId);
 }

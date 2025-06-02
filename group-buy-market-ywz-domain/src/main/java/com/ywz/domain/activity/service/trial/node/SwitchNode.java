@@ -6,6 +6,7 @@ import com.ywz.domain.activity.service.trial.AbstractGroupBuyMarketSupport;
 import com.ywz.domain.activity.service.trial.factory.DefaultActivityStrategyFactory;
 import com.ywz.types.design.framework.tree.StrategyHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.concurrent.ExecutionException;
@@ -17,7 +18,7 @@ import java.util.concurrent.TimeoutException;
  * @Description: 开关节点
  * @DateTime: 2025/6/1 15:24
  */
-@Component
+@Service
 public class SwitchNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
     @Resource
     private MarketNode marketNode;

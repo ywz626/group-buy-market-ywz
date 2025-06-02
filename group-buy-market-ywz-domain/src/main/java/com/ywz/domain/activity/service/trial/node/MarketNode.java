@@ -14,6 +14,7 @@ import com.ywz.domain.activity.service.trial.thread.QuerySkuVOFromDBThreadTask;
 import com.ywz.types.design.framework.tree.StrategyHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -25,7 +26,7 @@ import java.util.concurrent.*;
  * @Description: 营销优惠节点
  * @DateTime: 2025/6/1 15:24
  */
-@Component
+@Service
 @Slf4j
 public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
 
@@ -33,6 +34,8 @@ public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
     private EndNode endNode;
     @Resource
     private ErrorNode errorNode;
+    @Resource
+    private TagNode tagNode;
     @Resource
     private ThreadPoolExecutor threadPoolExecutor;
     @Resource
@@ -71,7 +74,7 @@ public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
         if(dynamicContext.getGroupBuyActivityDiscountVO() == null || dynamicContext.getGroupBuyActivityDiscountVO().getGroupBuyDiscount() == null || dynamicContext.getSkuVO() == null) {
             return errorNode;
         }
-        return endNode;
+        return tagNode;
     }
 
     @Override

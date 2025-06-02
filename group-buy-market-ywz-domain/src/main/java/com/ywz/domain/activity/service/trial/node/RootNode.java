@@ -11,6 +11,7 @@ import com.ywz.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
@@ -19,7 +20,7 @@ import javax.annotation.Resource;
  * @Description: 根节点
  * @DateTime: 2025/6/1 15:23
  */
-@Component
+@Service
 @Slf4j
 public class RootNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
 
