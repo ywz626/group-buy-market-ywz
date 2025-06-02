@@ -1,6 +1,7 @@
 package com.ywz.domain.tag.adapter.repository;
 
 import com.ywz.domain.tag.model.entity.CrowdTagsJobEntity;
+import org.redisson.api.RTransaction;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -23,7 +24,7 @@ public interface ITagRepository {
      * @param tagId  标签ID
      * @param userId 用户ID
      */
-    void addCrowdTagsUserId(String tagId, String userId);
+    RTransaction addCrowdTagsUserId(String tagId, String userId);
 
     /**
      * 更新人群标签统计量
@@ -31,5 +32,5 @@ public interface ITagRepository {
      * @param tagId 标签ID
      * @param count 统计数量
      */
-    void updateCrowdTagsStatistics(String tagId, int count);
+    void updateCrowdTagsStatistics(String tagId, int count,RTransaction rTransaction);
 }

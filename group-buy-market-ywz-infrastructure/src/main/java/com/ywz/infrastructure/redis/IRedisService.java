@@ -286,4 +286,11 @@ public interface IRedisService {
         }
     }
 
+    /**
+     * 创建一个事务
+     *
+     * @return RTransaction
+     */
+    RTransaction createTransaction();
+
 }

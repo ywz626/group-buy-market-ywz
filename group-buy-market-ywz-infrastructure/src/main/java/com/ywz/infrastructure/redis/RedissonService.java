@@ -191,4 +191,12 @@ public class RedissonService implements IRedisService {
         return redissonClient.getBitSet(key);
     }
 
+    @Override
+    public RTransaction createTransaction() {
+        return redissonClient.createTransaction(
+                TransactionOptions.defaults()
+                        .timeout(30, TimeUnit.SECONDS)
+                        .responseTimeout(3, TimeUnit.SECONDS)
+        );
+    }
 }

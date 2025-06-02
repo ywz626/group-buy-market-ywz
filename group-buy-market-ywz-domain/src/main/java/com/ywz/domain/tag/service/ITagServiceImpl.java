@@ -2,6 +2,7 @@ package com.ywz.domain.tag.service;
 
 import com.ywz.domain.tag.adapter.repository.ITagRepository;
 import com.ywz.domain.tag.model.entity.CrowdTagsJobEntity;
+import org.redisson.api.RTransaction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,11 +35,15 @@ public class ITagServiceImpl implements ITagService {
         }};
 
         // 4. 一般人群标签的处理在公司中，会有专门的数据数仓团队通过脚本方式写入到数据库，就不用这样一个个或者批次来写。
+        RTransaction rTransaction = null;
         for (String userId : userIds) {
-            repository.addCrowdTagsUserId(tagId, userId);
+            rTransaction = repository.addCrowdTagsUserId(tagId, userId);
+            if (rTransaction == null){
+                return;
+            }
         }
 
         // 5. 更新人群标签统计量
-        repository.updateCrowdTagsStatistics(tagId, userIds.size());
+        repository.updateCrowdTagsStatistics(tagId, userIds.size(),rTransaction);
     }
 }

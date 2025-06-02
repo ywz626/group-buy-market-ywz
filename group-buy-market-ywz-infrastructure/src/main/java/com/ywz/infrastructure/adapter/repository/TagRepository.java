@@ -14,6 +14,8 @@ import com.ywz.infrastructure.dao.po.CrowdTagsDetail;
 import com.ywz.infrastructure.dao.po.CrowdTagsJob;
 import com.ywz.infrastructure.redis.IRedisService;
 import org.redisson.api.RBitSet;
+import org.redisson.api.RTransaction;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -54,20 +56,37 @@ public class TagRepository implements ITagRepository {
     }
 
     @Override
-    public void addCrowdTagsUserId(String tagId, String userId) {
+    public RTransaction addCrowdTagsUserId(String tagId, String userId) {
         CrowdTagsDetail crowdTagsDetail = new CrowdTagsDetail();
         crowdTagsDetail.setUserId(userId);
         crowdTagsDetail.setTagId(tagId);
         crowdTagsDetailDao.insert(crowdTagsDetail);
         // 获取BitSet
         RBitSet bitSet = redisService.getBitSet(tagId);
-        bitSet.set(redisService.getIndexFromUserId(userId), true);
+        RTransaction transaction = redisService.createTransaction();
+        try{
+            // 尝试添加用户ID到人群标签的BitSet中
+            bitSet.setAsync(redisService.getIndexFromUserId(userId), true);
+        } catch (DuplicateKeyException e) {
+            // 如果用户ID已存在，则回滚事务
+            transaction.rollback();
+            // 用户ID已存在，直接返回
+            return null;
+        }
+        // 返回事务对象，表示操作成功
+        return transaction;
     }
 
     @Override
-    public void updateCrowdTagsStatistics(String tagId, int count) {
-        crowdTagsDao.update(new LambdaUpdateWrapper<CrowdTags>()
-                .setSql("statistics = statistics + {0}", count)
-                .eq(CrowdTags::getTagId, tagId));
+    public void updateCrowdTagsStatistics(String tagId, int count,RTransaction transaction) {
+        try {
+            crowdTagsDao.update(new LambdaUpdateWrapper<CrowdTags>()
+                    .setSql("statistics = statistics + {0}", count)
+                    .eq(CrowdTags::getTagId, tagId));
+        } catch (Exception e) {
+            transaction.rollback();
+            throw new RuntimeException(e);
+        }
+        transaction.commit();
     }
 }
