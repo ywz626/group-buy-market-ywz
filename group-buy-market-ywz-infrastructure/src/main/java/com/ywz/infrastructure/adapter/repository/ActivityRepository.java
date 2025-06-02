@@ -1,5 +1,6 @@
 package com.ywz.infrastructure.adapter.repository;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.ywz.domain.activity.adapter.repository.IActivityRepository;
@@ -7,21 +8,27 @@ import com.ywz.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
 import com.ywz.domain.activity.model.valobj.SkuVO;
 import com.ywz.infrastructure.dao.IGroupBuyActivityDao;
 import com.ywz.infrastructure.dao.IGroupBuyDiscountDao;
+import com.ywz.infrastructure.dao.IScSkuActivityDao;
 import com.ywz.infrastructure.dao.ISkuDao;
 import com.ywz.infrastructure.dao.po.GroupBuyActivityPO;
 import com.ywz.infrastructure.dao.po.GroupBuyDiscountPO;
+import com.ywz.infrastructure.dao.po.ScSkuActivity;
 import com.ywz.infrastructure.dao.po.Sku;
+import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 活动仓储实现
  * @DateTime: 2025/6/1 17:43
  */
 @Repository
+@Slf4j
 public class ActivityRepository implements IActivityRepository {
 
     @Resource
@@ -30,15 +37,23 @@ public class ActivityRepository implements IActivityRepository {
     private IGroupBuyDiscountDao groupBuyDiscountDao;
     @Resource
     private ISkuDao skuDao;
+    @Resource
+    private IScSkuActivityDao scSkuActivityDao;
 
     @Override
     public GroupBuyActivityDiscountVO queryGroupBuyActivityDiscountVO(String source, String channel) {
-        // 根据SC渠道值查询配置中最新的1个有效的活动
+        ScSkuActivity scSkuActivity = scSkuActivityDao.selectOne(Wrappers.<ScSkuActivity>lambdaQuery()
+                .eq(ScSkuActivity::getSource, source)
+                .eq(ScSkuActivity::getChannel, channel)
+                .orderByDesc(ScSkuActivity::getId));
+
         GroupBuyActivityPO groupBuyActivityRes = groupBuyActivityDao.selectOne(Wrappers.<GroupBuyActivityPO>lambdaQuery()
-                .eq(GroupBuyActivityPO::getSource,source)
-                .eq(GroupBuyActivityPO::getChannel, channel)
+                .eq(GroupBuyActivityPO::getActivityId, scSkuActivity.getActivityId())
                 .orderByDesc(GroupBuyActivityPO::getId));
 
+        if(groupBuyActivityRes == null || groupBuyActivityRes.getStartTime().after(new Date()) || groupBuyActivityRes.getEndTime().before(new Date())){
+            return null;
+        }
         String discountId = groupBuyActivityRes.getDiscountId();
 
         GroupBuyDiscountPO groupBuyDiscountRes = groupBuyDiscountDao.selectOne(Wrappers.<GroupBuyDiscountPO>lambdaQuery()
@@ -55,9 +70,9 @@ public class ActivityRepository implements IActivityRepository {
         return GroupBuyActivityDiscountVO.builder()
                 .activityId(groupBuyActivityRes.getActivityId())
                 .activityName(groupBuyActivityRes.getActivityName())
-                .source(groupBuyActivityRes.getSource())
-                .channel(groupBuyActivityRes.getChannel())
-                .goodsId(groupBuyActivityRes.getGoodsId())
+                .source(scSkuActivity.getSource())
+                .channel(scSkuActivity.getChannel())
+                .goodsId(scSkuActivity.getGoodsId())
                 .groupBuyDiscount(groupBuyDiscount)
                 .groupType(groupBuyActivityRes.getGroupType())
                 .takeLimitCount(groupBuyActivityRes.getTakeLimitCount())
@@ -75,6 +90,9 @@ public class ActivityRepository implements IActivityRepository {
     public SkuVO querySkuByGoodsId(String goodsId) {
         Sku sku = skuDao.selectOne(Wrappers.<Sku>lambdaQuery()
                 .eq(Sku::getGoodsId, goodsId));
+        if(sku == null){
+            return null;
+        }
         return SkuVO.builder()
                 .goodsId(sku.getGoodsId())
                 .goodsName(sku.getGoodsName())

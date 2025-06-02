@@ -29,7 +29,7 @@ public class IIndexGroupBuyMarketServiceTest {
     public void test_indexMarketTrial() throws Exception {
         MarketProductEntity marketProductEntity = new MarketProductEntity();
         marketProductEntity.setUserId("xiaofuge");
-        marketProductEntity.setSource("s01");
+        marketProductEntity.setSource("s02");
         marketProductEntity.setChannel("c01");
         marketProductEntity.setGoodsId("9890001");
 

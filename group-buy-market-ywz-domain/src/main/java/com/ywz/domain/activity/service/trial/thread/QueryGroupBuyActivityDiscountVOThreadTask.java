@@ -15,6 +15,8 @@ public class QueryGroupBuyActivityDiscountVOThreadTask implements Callable<Group
 
     private final String source;
     private final String channel;
+    private final IActivityRepository activityRepository;
+
 
     public QueryGroupBuyActivityDiscountVOThreadTask(String source, String channel, IActivityRepository activityRepository) {
         this.source = source;
@@ -22,7 +24,6 @@ public class QueryGroupBuyActivityDiscountVOThreadTask implements Callable<Group
         this.activityRepository = activityRepository;
     }
 
-    private final IActivityRepository activityRepository;
 
     @Override
     public GroupBuyActivityDiscountVO call() throws Exception {

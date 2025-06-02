@@ -67,7 +67,7 @@ public class TagRepository implements ITagRepository {
         try{
             // 尝试添加用户ID到人群标签的BitSet中
             bitSet.setAsync(redisService.getIndexFromUserId(userId), true);
-        } catch (DuplicateKeyException e) {
+        } catch (Exception e) {
             // 如果用户ID已存在，则回滚事务
             transaction.rollback();
             // 用户ID已存在，直接返回
