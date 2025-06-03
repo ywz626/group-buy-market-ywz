@@ -1,8 +1,6 @@
 package com.ywz.infrastructure.adapter.repository;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.ywz.domain.activity.adapter.repository.IActivityRepository;
 import com.ywz.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
 import com.ywz.domain.activity.model.valobj.SkuVO;
@@ -14,6 +12,7 @@ import com.ywz.infrastructure.dao.po.GroupBuyActivityPO;
 import com.ywz.infrastructure.dao.po.GroupBuyDiscountPO;
 import com.ywz.infrastructure.dao.po.ScSkuActivity;
 import com.ywz.infrastructure.dao.po.Sku;
+import com.ywz.infrastructure.dcc.DCCService;
 import com.ywz.infrastructure.redis.IRedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
@@ -43,6 +42,8 @@ public class ActivityRepository implements IActivityRepository {
     private IScSkuActivityDao scSkuActivityDao;
     @Resource
     private IRedisService redisService;
+    @Resource
+    private DCCService dccService;
 
     @Override
     public GroupBuyActivityDiscountVO queryGroupBuyActivityDiscountVO(String source, String channel) {
@@ -113,5 +114,15 @@ public class ActivityRepository implements IActivityRepository {
         }
         // 检查用户ID是否在BitSet中
         return bitSet.get(redisService.getIndexFromUserId(userId));
+    }
+
+    @Override
+    public boolean downgradeSwitch() {
+        return dccService.isDowngradeSwitch();
+    }
+
+    @Override
+    public boolean cutRange(String userId) {
+        return dccService.isCutRange(userId);
     }
 }

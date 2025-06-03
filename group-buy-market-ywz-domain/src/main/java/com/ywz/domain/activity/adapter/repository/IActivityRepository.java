@@ -35,4 +35,8 @@ public interface IActivityRepository {
      * @return true 如果在拼团活动范围内，false 如果不在范围内
      */
     boolean isTagCrowdRange(String tagId, String userId);
+
+    boolean downgradeSwitch();
+
+    boolean cutRange(String userId);
 }
