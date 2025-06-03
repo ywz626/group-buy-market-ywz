@@ -26,11 +26,12 @@ public class EndNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
     public TrialBalanceEntity doApply(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
         log.info("拼团商品查询试算服务-EndNode userId:{} requestParameter:{}", requestParameter.getUserId(), JSON.toJSONString(requestParameter));
 
+        // 整合数据
         GroupBuyActivityDiscountVO groupBuyActivityDiscountVO = dynamicContext.getGroupBuyActivityDiscountVO();
         SkuVO skuVO = dynamicContext.getSkuVO();
 
         BigDecimal deductionPrice = dynamicContext.getDeductionPrice();
-        // 返回空结果
+        // 返回结果
         return TrialBalanceEntity.builder()
                 .goodsId(skuVO.getGoodsId())
                 .goodsName(skuVO.getGoodsName())
@@ -41,6 +42,7 @@ public class EndNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
                 .endTime(groupBuyActivityDiscountVO.getEndTime())
                 .isVisible(dynamicContext.isVisible())
                 .isEnable(dynamicContext.isEnable())
+                .groupBuyActivityDiscountVO(groupBuyActivityDiscountVO)
                 .build();
     }
 

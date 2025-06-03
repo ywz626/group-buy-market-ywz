@@ -14,7 +14,7 @@ public class DCCService {
     @DCCValue("downgradeSwitch:0")
     private String downgradeSwitch;
 
-    @DCCValue("cutRange:100")
+    @DCCValue("cutRange:0")
     private String cutRange;
 
     public boolean isDowngradeSwitch() {

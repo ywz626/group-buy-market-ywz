@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 
 /**
- * @author Fuzhengwei bugstack.cn @小傅哥
+ * @author 于汶泽
  * @description 满减优惠计算
  * @create 2024-12-22 12:12
  */
