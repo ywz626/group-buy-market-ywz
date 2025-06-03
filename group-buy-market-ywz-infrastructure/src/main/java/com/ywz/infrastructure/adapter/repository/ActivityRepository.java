@@ -15,12 +15,10 @@ import com.ywz.infrastructure.dao.po.Sku;
 import com.ywz.infrastructure.dcc.DCCService;
 import com.ywz.infrastructure.redis.IRedisService;
 import lombok.extern.slf4j.Slf4j;
-import org.mybatis.spring.annotation.MapperScan;
 import org.redisson.api.RBitSet;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -46,17 +44,21 @@ public class ActivityRepository implements IActivityRepository {
     private DCCService dccService;
 
     @Override
-    public GroupBuyActivityDiscountVO queryGroupBuyActivityDiscountVO(String source, String channel) {
+    public GroupBuyActivityDiscountVO queryGroupBuyActivityDiscountVO(String source, String channel, String goodsId) {
         ScSkuActivity scSkuActivity = scSkuActivityDao.selectOne(Wrappers.<ScSkuActivity>lambdaQuery()
                 .eq(ScSkuActivity::getSource, source)
                 .eq(ScSkuActivity::getChannel, channel)
+                .eq(ScSkuActivity::getGoodsId, goodsId)
                 .orderByDesc(ScSkuActivity::getId));
 
+        if(scSkuActivity == null){
+            return null;
+        }
         GroupBuyActivityPO groupBuyActivityRes = groupBuyActivityDao.selectOne(Wrappers.<GroupBuyActivityPO>lambdaQuery()
                 .eq(GroupBuyActivityPO::getActivityId, scSkuActivity.getActivityId())
                 .orderByDesc(GroupBuyActivityPO::getId));
 
-        if(groupBuyActivityRes == null || groupBuyActivityRes.getStartTime().after(new Date()) || groupBuyActivityRes.getEndTime().before(new Date())){
+        if (groupBuyActivityRes == null || groupBuyActivityRes.getStartTime().after(new Date()) || groupBuyActivityRes.getEndTime().before(new Date())) {
             return null;
         }
         String discountId = groupBuyActivityRes.getDiscountId();
@@ -95,7 +97,7 @@ public class ActivityRepository implements IActivityRepository {
     public SkuVO querySkuByGoodsId(String goodsId) {
         Sku sku = skuDao.selectOne(Wrappers.<Sku>lambdaQuery()
                 .eq(Sku::getGoodsId, goodsId));
-        if(sku == null){
+        if (sku == null) {
             return null;
         }
         return SkuVO.builder()
@@ -108,7 +110,7 @@ public class ActivityRepository implements IActivityRepository {
     @Override
     public boolean isTagCrowdRange(String tagId, String userId) {
         RBitSet bitSet = redisService.getBitSet(tagId);
-        if(bitSet == null){
+        if (bitSet == null) {
             // 如果BitSet不存在，说明该标签没有用户，直接返回true
             return true;
         }

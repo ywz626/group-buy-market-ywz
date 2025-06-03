@@ -18,7 +18,7 @@ public interface IActivityRepository {
      * @param channel 来源
      * @return GroupBuyActivityDiscountVO
      */
-    GroupBuyActivityDiscountVO queryGroupBuyActivityDiscountVO(String source, String channel);
+    GroupBuyActivityDiscountVO queryGroupBuyActivityDiscountVO(String source, String channel,String goodsId);
 
     /**
      * 根据商品ID查询商品信息
