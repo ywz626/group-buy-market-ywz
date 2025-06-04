@@ -1,13 +1,13 @@
 package com.ywz.domain.trade.adapter.repository;
 
 import com.ywz.domain.trade.model.aggregate.GroupBuyOrderAggregate;
+import com.ywz.domain.trade.model.entity.GroupBuyActivityEntity;
 import com.ywz.domain.trade.model.entity.MarketPayOrderEntity;
 import com.ywz.domain.trade.model.valobj.GroupBuyProgressVO;
-import org.springframework.stereotype.Repository;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 仓储接口
  * @DateTime: 2025/6/3 16:44
  */
 public interface ITradeRepository {
@@ -36,4 +36,14 @@ public interface ITradeRepository {
      * @return GroupBuyProgressVO
      */
     GroupBuyProgressVO queryGroupBuyProgress(String teamId);
+
+    /**
+     * 查询拼团活动实体
+     *
+     * @param activityId 活动ID
+     * @return GroupBuyActivityEntity
+     */
+    GroupBuyActivityEntity queryGroupBuyActivityEntity(Long activityId);
+
+    Integer queryOrerCount(String userId, Long activityId);
 }

@@ -2,24 +2,27 @@ package com.ywz.infrastructure.adapter.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ywz.domain.trade.adapter.repository.ITradeRepository;
 import com.ywz.domain.trade.model.aggregate.GroupBuyOrderAggregate;
-import com.ywz.domain.trade.model.entity.MarketPayOrderEntity;
-import com.ywz.domain.trade.model.entity.PayActivityEntity;
-import com.ywz.domain.trade.model.entity.PayDiscountEntity;
-import com.ywz.domain.trade.model.entity.UserEntity;
+import com.ywz.domain.trade.model.entity.*;
 import com.ywz.domain.trade.model.valobj.GroupBuyProgressVO;
 import com.ywz.domain.trade.model.valobj.TradeOrderStatusEnumVO;
+import com.ywz.infrastructure.dao.IGroupBuyActivityDao;
 import com.ywz.infrastructure.dao.IGroupBuyOrderDao;
 import com.ywz.infrastructure.dao.IGroupBuyOrderListDao;
+import com.ywz.infrastructure.dao.po.GroupBuyActivityPO;
 import com.ywz.infrastructure.dao.po.GroupBuyOrder;
 import com.ywz.infrastructure.dao.po.GroupBuyOrderList;
+import com.ywz.types.enums.ActivityStatusEnumVO;
 import com.ywz.types.enums.ResponseCode;
 import com.ywz.types.exception.AppException;
 import jodd.util.StringUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Repository;
+import com.ywz.types.common.Constants;
 
 import javax.annotation.Resource;
 
@@ -28,6 +31,7 @@ import javax.annotation.Resource;
  * @Description: 仓储服务实现
  * @DateTime: 2025/6/3 16:45
  */
+@Slf4j
 @Repository
 public class TradeRepository implements ITradeRepository {
 
@@ -35,6 +39,8 @@ public class TradeRepository implements ITradeRepository {
     private IGroupBuyOrderDao groupBuyOrderDao;
     @Resource
     private IGroupBuyOrderListDao groupBuyOrderListDao;
+    @Resource
+    private IGroupBuyActivityDao groupBuyActivityDao;
 
     @Override
     public MarketPayOrderEntity queryMarketPayOrderEntityByOutTradeNo(String userId, String outTradeNo) {
@@ -61,6 +67,7 @@ public class TradeRepository implements ITradeRepository {
         UserEntity userEntity = groupBuyOrderAggregate.getUserEntity();
         PayActivityEntity payActivityEntity = groupBuyOrderAggregate.getPayActivityEntity();
         PayDiscountEntity payDiscountEntity = groupBuyOrderAggregate.getPayDiscountEntity();
+        Integer userTakeOrderCount = groupBuyOrderAggregate.getUserTakeOrderCount();
         // 构建拼团订单
         String teamId = payActivityEntity.getTeamId();
         if(StringUtil.isBlank(teamId)) {
@@ -106,9 +113,11 @@ public class TradeRepository implements ITradeRepository {
                 .deductionPrice(payDiscountEntity.getDeductionPrice())
                 .status(TradeOrderStatusEnumVO.CREATE.getCode())
                 .outTradeNo(payDiscountEntity.getOutTradeNo())
+                .bizId(payActivityEntity.getActivityId() + Constants.UNDERLINE + userEntity.getUserId() + Constants.UNDERLINE + (userTakeOrderCount + 1))
                 .build();
         try {
             // 写入拼团记录
+            log.info("信息：{}", groupBuyOrderListReq);
             groupBuyOrderListDao.insert(groupBuyOrderListReq);
         } catch (DuplicateKeyException e) {
             throw new AppException(ResponseCode.INDEX_EXCEPTION);
@@ -130,5 +139,33 @@ public class TradeRepository implements ITradeRepository {
                 .completeCount(groupBuyOrder.getCompleteCount())
                 .lockCount(groupBuyOrder.getLockCount())
                 .build();
+    }
+
+    @Override
+    public GroupBuyActivityEntity queryGroupBuyActivityEntity(Long activityId) {
+        GroupBuyActivityPO groupBuyActivityPO = groupBuyActivityDao.selectOne(Wrappers.<GroupBuyActivityPO>lambdaQuery()
+                .eq(GroupBuyActivityPO::getActivityId, activityId));
+        return GroupBuyActivityEntity.builder()
+                .activityName(groupBuyActivityPO.getActivityName())
+                .tagId(groupBuyActivityPO.getTagId())
+                .groupType(groupBuyActivityPO.getGroupType())
+                .discountId(groupBuyActivityPO.getDiscountId())
+                .target(groupBuyActivityPO.getTarget())
+                .takeLimitCount(groupBuyActivityPO.getTakeLimitCount())
+                .validTime(groupBuyActivityPO.getValidTime())
+                .tagScope(groupBuyActivityPO.getTagScope())
+                .activityId(activityId)
+                .status(ActivityStatusEnumVO.valueOf(groupBuyActivityPO.getStatus()))
+                .startTime(groupBuyActivityPO.getStartTime())
+                .endTime(groupBuyActivityPO.getEndTime())
+                .build();
+    }
+
+    @Override
+    public Integer queryOrerCount(String userId, Long activityId) {
+        Long count = groupBuyOrderListDao.selectCount(new LambdaQueryWrapper<GroupBuyOrderList>()
+                .eq(GroupBuyOrderList::getUserId, userId)
+                .eq(GroupBuyOrderList::getActivityId, activityId));
+        return count == null ? 0 : count.intValue();
     }
 }

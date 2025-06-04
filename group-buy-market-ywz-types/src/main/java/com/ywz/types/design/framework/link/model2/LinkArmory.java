@@ -20,4 +20,8 @@ public class LinkArmory<T,D,R>{
             businessLinkedList.add(logicLinkHandler);
         }
     }
+
+    public BusinessLinkedList<T, D, R> getBusinessLinkedList() {
+        return businessLinkedList;
+    }
 }

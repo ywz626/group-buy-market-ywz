@@ -26,6 +26,8 @@ public class PayDiscountEntity {
     private String goodsId;
     /** 商品名称 */
     private String goodsName;
+    /** 支付金额 */
+    private BigDecimal payPrice;
     /** 原始价格 */
     private BigDecimal originalPrice;
     /** 折扣金额 */

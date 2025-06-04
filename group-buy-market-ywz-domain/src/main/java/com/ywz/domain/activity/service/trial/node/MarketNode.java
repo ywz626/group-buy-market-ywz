@@ -63,9 +63,9 @@ public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntit
             return router(requestParameter, dynamicContext);
         }
         // 执行营销优惠计算
-        BigDecimal deductionPrice = iDiscountCalculateService.calculate(requestParameter.getUserId(), skuVO.getOriginalPrice(), groupBuyDiscount);
-        dynamicContext.setDeductionPrice(deductionPrice);
-
+        BigDecimal payPrice = iDiscountCalculateService.calculate(requestParameter.getUserId(), skuVO.getOriginalPrice(), groupBuyDiscount);
+        dynamicContext.setDeductionPrice(skuVO.getOriginalPrice().subtract(payPrice));
+        dynamicContext.setPayPrice(payPrice);
         return router(requestParameter, dynamicContext);
     }
 

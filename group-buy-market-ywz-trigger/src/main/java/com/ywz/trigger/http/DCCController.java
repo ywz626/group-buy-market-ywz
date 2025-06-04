@@ -11,7 +11,7 @@ import javax.annotation.Resource;
 
 /**
  * @author 于汶泽
- * @Description: 动态配置管理
+ * @Description: 动态配置管理 Dynamic Configuration Control (DCC) 控制器
  * @DateTime: 2025/6/3 13:12
  */
 @Slf4j

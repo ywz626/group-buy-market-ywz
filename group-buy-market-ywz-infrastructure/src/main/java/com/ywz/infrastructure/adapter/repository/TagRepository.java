@@ -61,7 +61,7 @@ public class TagRepository implements ITagRepository {
         crowdTagsDetail.setUserId(userId);
         crowdTagsDetail.setTagId(tagId);
         crowdTagsDetailDao.insert(crowdTagsDetail);
-        // 获取BitSet
+        // 根据tagid获取BitSet
         RBitSet bitSet = redisService.getBitSet(tagId);
         RTransaction transaction = redisService.createTransaction();
         try{

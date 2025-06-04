@@ -1,5 +1,6 @@
 package com.ywz.infrastructure.dao.po;
 
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,7 @@ import java.util.Date;
 public class GroupBuyOrder {
 
     /** 自增ID */
+    @TableId(value = "id", type = com.baomidou.mybatisplus.annotation.IdType.AUTO)
     private Long id;
     /** 拼单组队ID */
     private String teamId;

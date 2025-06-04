@@ -33,4 +33,5 @@ public interface ITagRepository {
      * @param count 统计数量
      */
     void updateCrowdTagsStatistics(String tagId, int count,RTransaction rTransaction);
+
 }

@@ -101,8 +101,18 @@ public class MarketTradeController implements IMarketTradeService {
                     .userId(userId)
                     .build());
 
+            // 人群限定
+            if(!trialBalanceEntity.getIsVisible()|| !trialBalanceEntity.getIsEnable()){
+                log.info("交易锁单拦截-人群限定:{} {}", userId, goodsId);
+                return Response.<LockMarketPayOrderResponseDTO>builder()
+                        .code(ResponseCode.E0007.getCode())
+                        .info(ResponseCode.E0007.getInfo())
+                        .build();
+            }
+
             GroupBuyActivityDiscountVO groupBuyActivityDiscountVO = trialBalanceEntity.getGroupBuyActivityDiscountVO();
             // 构建锁单请求对象
+            // 执行过滤
             marketPayOrderEntity = tradeOrderService.lockMarketPayOrder(
                     UserEntity.builder().userId(userId).build(),
                     PayActivityEntity.builder()
@@ -119,6 +129,7 @@ public class MarketTradeController implements IMarketTradeService {
                             .goodsId(goodsId)
                             .goodsName(trialBalanceEntity.getGoodsName())
                             .originalPrice(trialBalanceEntity.getOriginalPrice())
+                            .payPrice(trialBalanceEntity.getPayPrice())
                             .deductionPrice(trialBalanceEntity.getDeductionPrice())
                             .outTradeNo(outTradeNo)
                             .build());

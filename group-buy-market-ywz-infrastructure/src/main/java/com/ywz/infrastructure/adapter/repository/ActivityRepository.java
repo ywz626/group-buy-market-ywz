@@ -58,9 +58,10 @@ public class ActivityRepository implements IActivityRepository {
                 .eq(GroupBuyActivityPO::getActivityId, scSkuActivity.getActivityId())
                 .orderByDesc(GroupBuyActivityPO::getId));
 
-        if (groupBuyActivityRes == null || groupBuyActivityRes.getStartTime().after(new Date()) || groupBuyActivityRes.getEndTime().before(new Date())) {
-            return null;
-        }
+        // 判断时间是否在活动范围内
+//        if (groupBuyActivityRes == null || groupBuyActivityRes.getStartTime().after(new Date()) || groupBuyActivityRes.getEndTime().before(new Date())) {
+//            return null;
+//        }
         String discountId = groupBuyActivityRes.getDiscountId();
 
         GroupBuyDiscountPO groupBuyDiscountRes = groupBuyDiscountDao.selectOne(Wrappers.<GroupBuyDiscountPO>lambdaQuery()

@@ -26,6 +26,7 @@ public class TagNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, 
     @Override
     protected TrialBalanceEntity doApply(MarketProductEntity requestParameter, DefaultActivityStrategyFactory.DynamicContext dynamicContext) throws Exception {
 
+        // 判断活动是否对该用户可见可参与
         GroupBuyActivityDiscountVO groupBuyActivityDiscountVO = dynamicContext.getGroupBuyActivityDiscountVO();
         String tagId = groupBuyActivityDiscountVO.getTagId();
         boolean isVisible = groupBuyActivityDiscountVO.isValid();
