@@ -36,6 +36,9 @@ public class DCCValueBeanFactory implements BeanPostProcessor {
         this.redissonClient = redissonClient;
     }
 
+    /**
+     * 在运行时动态更新 DCC 配置值
+     */
     @Bean
     public RTopic dccRedisTopicListener(RedissonClient redissonClient, BeanFactory beanFactory) {
         RTopic topic = redissonClient.getTopic("group_buy_market_dcc");
@@ -78,6 +81,9 @@ public class DCCValueBeanFactory implements BeanPostProcessor {
         return topic;
     }
 
+    /**
+     *初始化 DCCValue 注解的属性值
+     */
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         Object targetBean = bean;
