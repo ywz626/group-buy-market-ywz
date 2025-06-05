@@ -16,14 +16,6 @@ import java.util.Date;
  */
 public interface ITradeRepository {
 
-    /**
-     * 根据用户ID和外部交易号查询未支付的营销订单
-     *
-     * @param userId 用户ID
-     * @param outTradeNo 外部交易号
-     * @return MarketPayOrderEntity
-     */
-    MarketPayOrderEntity queryMarketPayOrderEntityByOutTradeNo(String userId, String outTradeNo);
 
     /**
      * 锁定拼团订单
@@ -60,6 +52,12 @@ public interface ITradeRepository {
      */
     MarketPayOrderEntity queryMarketLockOrderByOutTradeNo(String outTradeNo, String userId);
 
+    /**
+     * 查询拼团组队实体
+     *
+     * @param teamId 拼团组队ID
+     * @return GroupBuyTeamEntity
+     */
     GroupBuyTeamEntity queryGroupBuyTeam(String teamId);
 
     /**
@@ -77,4 +75,14 @@ public interface ITradeRepository {
      * @return Date
      */
     int getActivityValidTime(Long activityId);
+
+    /**
+     * 判断是否在黑名单中
+     * @param source 来源
+     * @param channel 渠道
+     * @return 是否在黑名单中
+     */
+    boolean isSCBlackList(String source, String channel);
+
+
 }

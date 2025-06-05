@@ -2,9 +2,9 @@ package com.ywz.domain.trade.service.lock.filter;
 
 import com.ywz.domain.trade.adapter.repository.ITradeRepository;
 import com.ywz.domain.trade.model.entity.GroupBuyActivityEntity;
-import com.ywz.domain.trade.model.entity.TradeRuleCommandEntity;
-import com.ywz.domain.trade.model.entity.TradeRuleFilterBackEntity;
-import com.ywz.domain.trade.service.lock.factory.TradeRuleFilterFactory;
+import com.ywz.domain.trade.model.entity.TradeLockRuleCommandEntity;
+import com.ywz.domain.trade.model.entity.TradeLockRuleFilterBackEntity;
+import com.ywz.domain.trade.service.lock.factory.TradeLockRuleFilterFactory;
 import com.ywz.types.design.framework.link.model2.handler.ILogicLinkHandler;
 import com.ywz.types.enums.ActivityStatusEnumVO;
 import com.ywz.types.enums.ResponseCode;
@@ -22,13 +22,13 @@ import java.util.Date;
  */
 @Slf4j
 @Service
-public class ActivityUsabilityRuleFilter implements ILogicLinkHandler<TradeRuleCommandEntity, TradeRuleFilterFactory.DynamicContext, TradeRuleFilterBackEntity>{
+public class ActivityUsabilityRuleFilter implements ILogicLinkHandler<TradeLockRuleCommandEntity, TradeLockRuleFilterFactory.DynamicContext, TradeLockRuleFilterBackEntity>{
 
     @Resource
     private ITradeRepository repository;
 
     @Override
-    public TradeRuleFilterBackEntity apply(TradeRuleCommandEntity requestParameter, TradeRuleFilterFactory.DynamicContext dynamicContext) throws Exception {
+    public TradeLockRuleFilterBackEntity apply(TradeLockRuleCommandEntity requestParameter, TradeLockRuleFilterFactory.DynamicContext dynamicContext) throws Exception {
         // 活动的有效期、状态，以及个人参与拼团的次数
         // 查询活动状态
         GroupBuyActivityEntity groupBuyActivityEntity = repository.queryGroupBuyActivityEntity(requestParameter.getActivityId());

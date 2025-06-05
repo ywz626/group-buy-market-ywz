@@ -18,6 +18,7 @@ import com.ywz.infrastructure.dao.po.GroupBuyActivityPO;
 import com.ywz.infrastructure.dao.po.GroupBuyOrder;
 import com.ywz.infrastructure.dao.po.GroupBuyOrderList;
 import com.ywz.infrastructure.dao.po.NotifyTask;
+import com.ywz.infrastructure.dcc.DCCService;
 import com.ywz.types.enums.ActivityStatusEnumVO;
 import com.ywz.types.enums.GroupBuyOrderEnumVO;
 import com.ywz.types.enums.ResponseCode;
@@ -31,6 +32,7 @@ import com.ywz.types.common.Constants;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -52,22 +54,25 @@ public class TradeRepository implements ITradeRepository {
     private IGroupBuyActivityDao groupBuyActivityDao;
     @Resource
     private INotifyTaskDao notifyTaskDao;
+    @Resource
+    private DCCService dccService;
+
+
 
     @Override
-    public MarketPayOrderEntity queryMarketPayOrderEntityByOutTradeNo(String userId, String outTradeNo) {
-        // 查询未支付的拼团订单
+    public MarketPayOrderEntity queryMarketLockOrderByOutTradeNo(String userId, String outTradeNo) {
         GroupBuyOrderList groupBuyOrderList = groupBuyOrderListDao.selectOne(new LambdaQueryWrapper<GroupBuyOrderList>()
                 .eq(GroupBuyOrderList::getUserId, userId)
                 .eq(GroupBuyOrderList::getOutTradeNo, outTradeNo)
-                .eq(GroupBuyOrderList::getStatus, 0));
+                .eq(GroupBuyOrderList::getStatus, TradeOrderStatusEnumVO.CREATE.getCode()));
         if (groupBuyOrderList == null) {
             // 未找到对应的订单
             return null;
         }
-
         // 整合对象
         return MarketPayOrderEntity.builder()
                 .orderId(groupBuyOrderList.getOrderId())
+                .teamId(groupBuyOrderList.getTeamId())
                 .deductionPrice(groupBuyOrderList.getDeductionPrice())
                 .tradeOrderStatusEnumVO(TradeOrderStatusEnumVO.valueOf(groupBuyOrderList.getStatus()))
                 .build();
@@ -85,6 +90,10 @@ public class TradeRepository implements ITradeRepository {
         if (StringUtil.isBlank(teamId)) {
             // 新团
             teamId = RandomStringUtils.randomNumeric(8);
+            Integer validTime = payActivityEntity.getValidTime();
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(new Date());
+            calendar.add(Calendar.MINUTE, validTime);
             GroupBuyOrder groupBuyOrder = GroupBuyOrder.builder()
                     .teamId(teamId)
                     .activityId(payActivityEntity.getActivityId())
@@ -95,6 +104,8 @@ public class TradeRepository implements ITradeRepository {
                     .payPrice(payDiscountEntity.getDeductionPrice())
                     .targetCount(payActivityEntity.getTargetCount())
                     .completeCount(0)
+                    .validStartTime(new Date())
+                    .validEndTime(calendar.getTime())
                     .lockCount(1)
                     .build();
             groupBuyOrderDao.insert(groupBuyOrder);
@@ -180,24 +191,7 @@ public class TradeRepository implements ITradeRepository {
         return count == null ? 0 : count.intValue();
     }
 
-    @Override
-    public MarketPayOrderEntity queryMarketLockOrderByOutTradeNo(String outTradeNo, String userId) {
-        GroupBuyOrderList groupBuyOrderList = groupBuyOrderListDao.selectOne(new LambdaQueryWrapper<GroupBuyOrderList>()
-                .eq(GroupBuyOrderList::getUserId, userId)
-                .eq(GroupBuyOrderList::getOutTradeNo, outTradeNo)
-                .eq(GroupBuyOrderList::getStatus, TradeOrderStatusEnumVO.CREATE.getCode()));
-        if (groupBuyOrderList == null) {
-            // 未找到对应的订单
-            return null;
-        }
-        // 整合对象
-        return MarketPayOrderEntity.builder()
-                .orderId(groupBuyOrderList.getOrderId())
-                .teamId(groupBuyOrderList.getTeamId())
-                .deductionPrice(groupBuyOrderList.getDeductionPrice())
-                .tradeOrderStatusEnumVO(TradeOrderStatusEnumVO.valueOf(groupBuyOrderList.getStatus()))
-                .build();
-    }
+
 
     @Override
     public GroupBuyTeamEntity queryGroupBuyTeam(String teamId) {
@@ -235,7 +229,7 @@ public class TradeRepository implements ITradeRepository {
         UserEntity userEntity = groupBuyTeamSettlementAggregate.getUserEntity();
         // 更新拼团明细订单状态
         int update = groupBuyOrderListDao.update(Wrappers.<GroupBuyOrderList>lambdaUpdate()
-                .setSql("status = 1, update_time = now()")
+                .setSql("status = 1, update_time = now() ,out_trade_time = {0}", tradePaySuccessEntity.getOutTradeTime())
                 .eq(GroupBuyOrderList::getUserId, userEntity.getUserId())
                 .eq(GroupBuyOrderList::getOutTradeNo, tradePaySuccessEntity.getOutTradeNo()));
         if (update != 1) {
@@ -244,11 +238,11 @@ public class TradeRepository implements ITradeRepository {
         }
 
         // 更新拼团订单状态为已完成
-        int update1 = groupBuyOrderDao.update(Wrappers.<GroupBuyOrder>lambdaUpdate()
+        int updateOrder = groupBuyOrderDao.update(Wrappers.<GroupBuyOrder>lambdaUpdate()
                 .setSql("complete_count = complete_count + 1")
                 .apply("{0} < {1}", "complete_count", "target_count")
                 .eq(GroupBuyOrder::getTeamId, groupBuyTeamEntity.getTeamId()));
-        if(update1 != 1) {
+        if(updateOrder != 1) {
             // 更新失败，抛出异常
             throw new AppException(ResponseCode.UPDATE_ZERO);
         }
@@ -275,4 +269,12 @@ public class TradeRepository implements ITradeRepository {
     public int getActivityValidTime(Long activityId) {
         return groupBuyActivityDao.getActivityValidTime(activityId);
     }
+
+    @Override
+    public boolean isSCBlackList(String source, String channel) {
+        return dccService.isScBlackList(source, channel);
+    }
+
+
+
 }

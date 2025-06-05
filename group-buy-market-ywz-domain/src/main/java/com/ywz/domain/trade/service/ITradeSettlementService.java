@@ -10,5 +10,5 @@ import com.ywz.domain.trade.model.entity.TradePaySuccessEntity;
  */
 public interface ITradeSettlementService {
 
-    TradePaySettlementEntity settlementMarketPayOrder(TradePaySuccessEntity tradePaySuccessEntity);
+    TradePaySettlementEntity settlementMarketPayOrder(TradePaySuccessEntity tradePaySuccessEntity) throws Exception;
 }

@@ -10,14 +10,14 @@ import java.util.Date;
 
 /**
  * @author Fuzhengwei bugstack.cn @小傅哥
- * @description 拼团组队实体对象
- * @create 2025-01-26 16:19
+ * @description 拼团交易结算规则反馈
+ * @create 2025-01-29 09:53
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class GroupBuyTeamEntity {
+public class TradeSettlementRuleFilterBackEntity {
 
     /** 拼单组队ID */
     private String teamId;
@@ -31,9 +31,7 @@ public class GroupBuyTeamEntity {
     private Integer lockCount;
     /** 状态（0-拼单中、1-完成、2-失败） */
     private GroupBuyOrderEnumVO status;
-
-    private Date createTime;
-    /** 拼团实际开始时间 - 参与拼团时间 */
+    /** 拼团开始时间 - 参与拼团时间 */
     private Date validStartTime;
     /** 拼团结束时间 - 拼团有效时长 */
     private Date validEndTime;

@@ -24,6 +24,8 @@ public class PayActivityEntity {
     private Long activityId;
     /** 活动名称 */
     private String activityName;
+    /** 拼团有效时长 */
+    private Integer validTime;
     /** 拼团开始时间 */
     private Date startTime;
     /** 拼团结束时间 */

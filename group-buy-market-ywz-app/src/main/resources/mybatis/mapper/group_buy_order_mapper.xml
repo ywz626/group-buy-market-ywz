@@ -19,15 +19,6 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.ywz.infrastructure.dao.po.GroupBuyOrder">
-        insert into group_buy_order(
-        team_id, activity_id, source, channel, original_price,
-        deduction_price, pay_price, target_count, complete_count, lock_count, status, create_time, update_time
-        ) values(
-        #{teamId}, #{activityId}, #{source}, #{channel}, #{originalPrice},
-        #{deductionPrice}, #{payPrice}, #{targetCount}, #{completeCount}, #{lockCount}, 0, now(), now()
-        )
-    </insert>
 
     <update id="updateAddLockCount" parameterType="java.lang.String">
         <![CDATA[

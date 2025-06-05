@@ -8,15 +8,15 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * @author 于汶泽
- * @Description: 交易支付订单实体对象
- * @DateTime: 2025/6/4 21:10
+ * @author Fuzhengwei bugstack.cn @小傅哥
+ * @description 拼团交易结算规则命令
+ * @create 2025-01-29 09:55
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class TradePaySuccessEntity {
+public class TradeSettlementRuleCommandEntity {
 
     /** 渠道 */
     private String source;
@@ -28,4 +28,5 @@ public class TradePaySuccessEntity {
     private String outTradeNo;
     /** 外部交易时间 */
     private Date outTradeTime;
+
 }

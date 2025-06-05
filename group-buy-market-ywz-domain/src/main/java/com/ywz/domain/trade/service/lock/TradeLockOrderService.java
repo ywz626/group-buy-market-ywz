@@ -5,7 +5,7 @@ import com.ywz.domain.trade.model.aggregate.GroupBuyOrderAggregate;
 import com.ywz.domain.trade.model.entity.*;
 import com.ywz.domain.trade.model.valobj.GroupBuyProgressVO;
 import com.ywz.domain.trade.service.ITradeOrderService;
-import com.ywz.domain.trade.service.lock.factory.TradeRuleFilterFactory;
+import com.ywz.domain.trade.service.lock.factory.TradeLockRuleFilterFactory;
 import com.ywz.types.design.framework.link.model2.chain.BusinessLinkedList;
 import org.springframework.stereotype.Service;
 
@@ -18,20 +18,20 @@ import javax.annotation.Resource;
  * @DateTime: 2025/6/3 19:07
  */
 @Service
-public class TradeOrderService implements ITradeOrderService {
+public class TradeLockOrderService implements ITradeOrderService {
 
     private final ITradeRepository tradeRepository;
 
-    @Resource(name = "tradeRuleFilter")
-    private BusinessLinkedList<TradeRuleCommandEntity, TradeRuleFilterFactory.DynamicContext, TradeRuleFilterBackEntity> tradeRuleFilter;
+    @Resource(name = "tradeLockRuleFilter")
+    private BusinessLinkedList<TradeLockRuleCommandEntity, TradeLockRuleFilterFactory.DynamicContext, TradeLockRuleFilterBackEntity> tradeRuleFilter;
 
-    public TradeOrderService(ITradeRepository tradeRepository) {
+    public TradeLockOrderService(ITradeRepository tradeRepository) {
         this.tradeRepository = tradeRepository;
     }
 
     @Override
     public MarketPayOrderEntity queryNoPayMarketPayOrderByOutTradeNo(String userId, String outTradeNo) {
-        return tradeRepository.queryMarketPayOrderEntityByOutTradeNo(userId, outTradeNo);
+        return tradeRepository.queryMarketLockOrderByOutTradeNo(userId, outTradeNo);
     }
 
     @Override
@@ -41,12 +41,12 @@ public class TradeOrderService implements ITradeOrderService {
 
     @Override
     public MarketPayOrderEntity lockMarketPayOrder(UserEntity userEntity, PayActivityEntity payActivityEntity, PayDiscountEntity payDiscountEntity) throws Exception {
-        TradeRuleCommandEntity tradeRuleCommand = TradeRuleCommandEntity.builder()
+        TradeLockRuleCommandEntity tradeRuleCommand = TradeLockRuleCommandEntity.builder()
                 .activityId(payActivityEntity.getActivityId())
                 .userId(userEntity.getUserId())
                 .build();
         // 应用规则过滤器链
-        TradeRuleFilterBackEntity tradeBackEntity = tradeRuleFilter.apply(tradeRuleCommand, new TradeRuleFilterFactory.DynamicContext());
+        TradeLockRuleFilterBackEntity tradeBackEntity = tradeRuleFilter.apply(tradeRuleCommand, new TradeLockRuleFilterFactory.DynamicContext());
         Integer userTakeOrderCount = tradeBackEntity.getUserTakeOrderCount();
 
         // 构建聚合对象
