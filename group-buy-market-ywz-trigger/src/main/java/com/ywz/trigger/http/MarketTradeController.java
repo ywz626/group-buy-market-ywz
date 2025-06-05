@@ -82,7 +82,7 @@ public class MarketTradeController implements IMarketTradeService {
                         .build();
             }
 
-            if (null != teamId) {
+            if (!StringUtils.isBlank(teamId)) {
                 // 查询拼团活动
                 GroupBuyProgressVO groupBuyProgressVO = tradeOrderService.queryGroupBuyProgress(teamId);
                 if (null != groupBuyProgressVO && Objects.equals(groupBuyProgressVO.getTargetCount(), groupBuyProgressVO.getLockCount())) {

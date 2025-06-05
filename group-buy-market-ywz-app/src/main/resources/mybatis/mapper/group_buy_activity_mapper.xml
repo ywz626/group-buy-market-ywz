@@ -19,18 +19,12 @@
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
-
-    <select id="queryGroupBuyActivityList" resultMap="dataMap">
-        select * from group_buy_activity
+    <select id="getActivityValidTime" resultType="java.lang.Integer" parameterType="java.lang.Long">
+        select valid_time from group_buy_activity
+        <where>
+            activity_id = #{activityId} and status = 1
+        </where>
     </select>
 
-
-    <select id="queryValidGroupBuyActivityId" parameterType="java.lang.Long" resultMap="dataMap">
-        select
-        activity_id, activity_name, discount_id, group_type, take_limit_count,
-        target, valid_time, status, start_time, end_time, tag_id, tag_scope
-        from group_buy_activity
-        where activity_id = #{activityId} and status = 1
-    </select>
 
 </mapper>

@@ -1,11 +1,10 @@
-package com.ywz.domain.trade.service.filter;
+package com.ywz.domain.trade.service.lock.filter;
 
-import com.ywz.domain.tag.adapter.repository.ITagRepository;
 import com.ywz.domain.trade.adapter.repository.ITradeRepository;
 import com.ywz.domain.trade.model.entity.GroupBuyActivityEntity;
 import com.ywz.domain.trade.model.entity.TradeRuleCommandEntity;
 import com.ywz.domain.trade.model.entity.TradeRuleFilterBackEntity;
-import com.ywz.domain.trade.service.factory.TradeRuleFilterFactory;
+import com.ywz.domain.trade.service.lock.factory.TradeRuleFilterFactory;
 import com.ywz.types.design.framework.link.model2.handler.ILogicLinkHandler;
 import com.ywz.types.enums.ResponseCode;
 import com.ywz.types.exception.AppException;

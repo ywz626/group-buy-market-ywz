@@ -1,10 +1,10 @@
-package com.ywz.domain.trade.service.factory;
+package com.ywz.domain.trade.service.lock.factory;
 
 import com.ywz.domain.trade.model.entity.GroupBuyActivityEntity;
 import com.ywz.domain.trade.model.entity.TradeRuleCommandEntity;
 import com.ywz.domain.trade.model.entity.TradeRuleFilterBackEntity;
-import com.ywz.domain.trade.service.filter.ActivityUsabilityRuleFilter;
-import com.ywz.domain.trade.service.filter.UserTakeLimitRuleFilter;
+import com.ywz.domain.trade.service.lock.filter.ActivityUsabilityRuleFilter;
+import com.ywz.domain.trade.service.lock.filter.UserTakeLimitRuleFilter;
 import com.ywz.types.design.framework.link.model2.LinkArmory;
 import com.ywz.types.design.framework.link.model2.chain.BusinessLinkedList;
 import lombok.AllArgsConstructor;
