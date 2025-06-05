@@ -23,7 +23,7 @@ public class TradeLockOrderService implements ITradeOrderService {
     private final ITradeRepository tradeRepository;
 
     @Resource(name = "tradeLockRuleFilter")
-    private BusinessLinkedList<TradeLockRuleCommandEntity, TradeLockRuleFilterFactory.DynamicContext, TradeLockRuleFilterBackEntity> tradeRuleFilter;
+    private BusinessLinkedList<TradeLockRuleCommandEntity, TradeLockRuleFilterFactory.DynamicContext, TradeLockRuleFilterBackEntity> tradeLockRuleFilter;
 
     public TradeLockOrderService(ITradeRepository tradeRepository) {
         this.tradeRepository = tradeRepository;
@@ -46,7 +46,7 @@ public class TradeLockOrderService implements ITradeOrderService {
                 .userId(userEntity.getUserId())
                 .build();
         // 应用规则过滤器链
-        TradeLockRuleFilterBackEntity tradeBackEntity = tradeRuleFilter.apply(tradeRuleCommand, new TradeLockRuleFilterFactory.DynamicContext());
+        TradeLockRuleFilterBackEntity tradeBackEntity = tradeLockRuleFilter.apply(tradeRuleCommand, new TradeLockRuleFilterFactory.DynamicContext());
         Integer userTakeOrderCount = tradeBackEntity.getUserTakeOrderCount();
 
         // 构建聚合对象

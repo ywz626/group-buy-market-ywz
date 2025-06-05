@@ -12,7 +12,7 @@ public class LockMarketPayOrderRequestDTO {
 
     // 用户ID
     private String userId;
-    // 拼单组队ID - 可为空，为空则创建新组队ID
+    /**拼单组队ID - 可为空，为空则创建新组队ID*/
     private String teamId;
     // 活动ID
     private Long activityId;
@@ -24,5 +24,7 @@ public class LockMarketPayOrderRequestDTO {
     private String channel;
     // 外部交易单号
     private String outTradeNo;
+
+    private String notifyUrl;
 
 }

@@ -29,6 +29,7 @@ public class EndRuleFilter implements ILogicLinkHandler<TradeSettlementRuleComma
                 .activityId(groupBuyTeamEntity.getActivityId())
                 .validStartTime(groupBuyTeamEntity.getValidStartTime())
                 .completeCount(groupBuyTeamEntity.getCompleteCount())
+                .notifyUrl(groupBuyTeamEntity.getNotifyUrl())
                 .build();
     }
 }

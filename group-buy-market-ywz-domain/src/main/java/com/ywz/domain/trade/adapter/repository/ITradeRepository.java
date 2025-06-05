@@ -5,9 +5,11 @@ import com.ywz.domain.trade.model.aggregate.GroupBuyTeamSettlementAggregate;
 import com.ywz.domain.trade.model.entity.GroupBuyActivityEntity;
 import com.ywz.domain.trade.model.entity.GroupBuyTeamEntity;
 import com.ywz.domain.trade.model.entity.MarketPayOrderEntity;
+import com.ywz.domain.trade.model.entity.NotifyTaskEntity;
 import com.ywz.domain.trade.model.valobj.GroupBuyProgressVO;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author 于汶泽
@@ -67,7 +69,7 @@ public interface ITradeRepository {
      */
     void updateGroupBuyOrderListStatus(String userId, String outTradeNo);
 
-    void settlementMarketPayOrder(GroupBuyTeamSettlementAggregate groupBuyTeamSettlementAggregate);
+    boolean settlementMarketPayOrder(GroupBuyTeamSettlementAggregate groupBuyTeamSettlementAggregate);
 
     /**
      * 获取活动有效时间
@@ -85,4 +87,13 @@ public interface ITradeRepository {
     boolean isSCBlackList(String source, String channel);
 
 
+    List<NotifyTaskEntity> queryNotifyTaskEntityListByStatus();
+
+    List<NotifyTaskEntity> queryNotifyTaskEntityListByTeamId(String teamId);
+
+    int updateNotifyTaskStatusSuccess(String teamId);
+
+    int updateNotifyTaskStatusError(String teamId);
+
+    int updateNotifyTaskStatusRetry(String teamId);
 }

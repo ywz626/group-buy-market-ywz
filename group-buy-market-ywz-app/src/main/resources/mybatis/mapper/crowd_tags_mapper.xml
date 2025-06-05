@@ -12,10 +12,6 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <update id="updateCrowdTagsStatistics" parameterType="com.ywz.infrastructure.dao.po.CrowdTags">
-        update crowd_tags
-        set statistics = statistics + #{statistics}
-        where tag_id = #{tagId}
-    </update>
+
 
 </mapper>

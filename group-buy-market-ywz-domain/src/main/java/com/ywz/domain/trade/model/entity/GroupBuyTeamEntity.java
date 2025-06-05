@@ -38,4 +38,5 @@ public class GroupBuyTeamEntity {
     /** 拼团结束时间 - 拼团有效时长 */
     private Date validEndTime;
 
+    private String notifyUrl;
 }

@@ -46,6 +46,11 @@ public class MarketTradeController implements IMarketTradeService {
     @Resource
     private ITradeOrderService tradeOrderService;
 
+    /**
+     * 进行锁单操作
+     * @param lockMarketPayOrderRequestDTO 锁单请求参数
+     * @return
+     */
     @Override
     @Transactional(rollbackFor = Exception.class, timeout = 500)
     public Response<LockMarketPayOrderResponseDTO> lockMarketPayOrder(LockMarketPayOrderRequestDTO lockMarketPayOrderRequestDTO) {
@@ -57,6 +62,7 @@ public class MarketTradeController implements IMarketTradeService {
             Long activityId = lockMarketPayOrderRequestDTO.getActivityId();
             String outTradeNo = lockMarketPayOrderRequestDTO.getOutTradeNo();
             String teamId = lockMarketPayOrderRequestDTO.getTeamId();
+            String notifyUrl = lockMarketPayOrderRequestDTO.getNotifyUrl();
 
             if (StringUtils.isBlank(userId) || StringUtils.isBlank(source) || StringUtils.isBlank(channel) || StringUtils.isBlank(goodsId) || StringUtils.isBlank(goodsId) || null == activityId) {
                 return Response.<LockMarketPayOrderResponseDTO>builder()
@@ -133,6 +139,7 @@ public class MarketTradeController implements IMarketTradeService {
                             .payPrice(trialBalanceEntity.getPayPrice())
                             .deductionPrice(trialBalanceEntity.getDeductionPrice())
                             .outTradeNo(outTradeNo)
+                            .notifyUrl(notifyUrl)
                             .build());
 
             log.info("交易锁单记录(新):{} marketPayOrderEntity:{}", userId, JSON.toJSONString(marketPayOrderEntity));
