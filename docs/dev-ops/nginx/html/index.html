@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手写MyBatis：渐进式源码实践 (全彩) - 小傅哥拼团</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+        }
+        /* 轮播图样式 */
+        .swiper {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+        }
+        .swiper-wrapper {
+            display: flex;
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+        .swiper-slide {
+            flex-shrink: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .swiper-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .swiper-pagination {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        .swiper-pagination-bullet {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+        }
+        .swiper-pagination-bullet-active {
+            background-color: #fff;
+        }
+        /* 商品信息 */
+        .product-info {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .product-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .promotion-tag {
+            display: inline-block;
+            background-color: #fff9e6;
+            color: #ff8000;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        .price-container {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 10px;
+        }
+        .current-price {
+            color: #e02e24;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .original-price {
+            color: #999;
+            font-size: 14px;
+            text-decoration: line-through;
+            margin-left: 10px;
+        }
+        /* 拼团信息 */
+        .group-buy-info {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .group-buy-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .group-buy-list {
+            margin-top: 15px;
+        }
+        .group-buy-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            overflow: hidden;
+        }
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .user-info {
+            flex: 1;
+        }
+        .user-name {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .countdown {
+            font-size: 12px;
+            color: #999;
+        }
+        .join-btn {
+            background-color: #e02e24;
+            color: #fff;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        /* 底部购买栏 */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            height: 50px;
+            background-color: #fff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .price-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 15px;
+        }
+        .bottom-price {
+            color: #e02e24;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .buy-btn {
+            width: 120px;
+            background-color: #e02e24;
+            color: #fff;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .group-buy-btn {
+            width: 120px;
+            background-color: #ff8000;
+            color: #fff;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 轮播图 -->
+        <div class="swiper">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide">
+                    <img src="https://bugstack.cn/images/article/product/book/mybatis-03.png?raw=true" alt="商品图片1">
+                </div>
+                <div class="swiper-slide">
+                    <img src="https://bugstack.cn/images/article/product/book/mybatis-03.png?raw=true" alt="商品图片2">
+                </div>
+                <div class="swiper-slide">
+                    <img src="https://bugstack.cn/images/article/product/book/mybatis-03.png?raw=true" alt="商品图片3">
+                </div>
+            </div>
+            <div class="swiper-pagination">
+                <div class="swiper-pagination-bullet swiper-pagination-bullet-active"></div>
+                <div class="swiper-pagination-bullet"></div>
+                <div class="swiper-pagination-bullet"></div>
+            </div>
+        </div>
+
+        <!-- 商品信息 -->
+        <div class="product-info">
+            <h1 class="product-title">手写MyBatis：渐进式源码实践 (全彩)</h1>
+            <div class="promotion-tag">大促优惠！直降 ¥60, 76人拼团，参与马上抢到</div>
+            <div class="price-container">
+                <span class="current-price">¥100</span>
+                <span class="original-price">¥80</span>
+            </div>
+        </div>
+
+        <!-- 拼团信息 -->
+        <div class="group-buy-info">
+            <div class="group-buy-title">拼团进行中，可直接参与</div>
+            <div class="group-buy-list">
+                <div class="group-buy-item">
+                    <div class="avatar">小</div>
+                    <div class="user-info">
+                        <div class="user-name">小傅哥</div>
+                        <div class="countdown">拼单即将结束 00:05:49</div>
+                    </div>
+                    <button class="join-btn">立即抢单</button>
+                </div>
+                <div class="group-buy-item">
+                    <div class="avatar">李</div>
+                    <div class="user-info">
+                        <div class="user-name">李二狗</div>
+                        <div class="countdown">拼单即将结束 00:05:49</div>
+                    </div>
+                    <button class="join-btn">立即抢单</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部购买栏 -->
+        <div class="bottom-bar">
+            <div class="price-info">
+                <div class="bottom-price">¥100</div>
+            </div>
+            <button class="buy-btn" id="singleBuyBtn">单独购买</button>
+            <button class="group-buy-btn" id="groupBuyBtn">开团购买</button>
+        </div>
+    </div>
+
+    <script>
+        // 轮播图逻辑
+        const swiper = document.querySelector('.swiper-wrapper');
+        const bullets = document.querySelectorAll('.swiper-pagination-bullet');
+        let currentIndex = 0;
+
+        function showSlide(index) {
+            swiper.style.transform = `translateX(-${index * 100}%)`;
+            bullets.forEach((bullet, i) => {
+                bullet.classList.toggle('swiper-pagination-bullet-active', i === index);
+            });
+            currentIndex = index;
+        }
+
+        bullets.forEach((bullet, index) => {
+            bullet.addEventListener('click', () => {
+                showSlide(index);
+            });
+        });
+
+        // 自动轮播
+        setInterval(() => {
+            currentIndex = (currentIndex + 1) % 3;
+            showSlide(currentIndex);
+        }, 3000);
+
+        // 检查登录状态
+        function checkLogin() {
+            const userInfo = getCookie('userInfo');
+            return userInfo ? JSON.parse(userInfo) : null;
+        }
+
+        // 获取cookie
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        // 购买按钮点击事件
+        document.getElementById('singleBuyBtn').addEventListener('click', function() {
+            const user = checkLogin();
+            if (!user) {
+                window.location.href = 'login.html?redirect=index.html&type=single';
+            } else {
+                showPaymentPopup('single');
+            }
+        });
+
+        document.getElementById('groupBuyBtn').addEventListener('click', function() {
+            const user = checkLogin();
+            if (!user) {
+                window.location.href = 'login.html?redirect=index.html&type=group';
+            } else {
+                showPaymentPopup('group');
+            }
+        });
+
+        // 拼团按钮点击事件
+        document.querySelectorAll('.join-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const user = checkLogin();
+                if (!user) {
+                    window.location.href = 'login.html?redirect=index.html&type=join';
+                } else {
+                    showPaymentPopup('join');
+                }
+            });
+        });
+
+        // 显示支付弹窗
+        function showPaymentPopup(type) {
+            // 创建一个iframe来加载支付页面
+            const iframe = document.createElement('iframe');
+            iframe.src = `payment.html?type=${type}`;
+            iframe.style.position = 'fixed';
+            iframe.style.top = '0';
+            iframe.style.left = '0';
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            iframe.style.zIndex = '1000';
+            document.body.appendChild(iframe);
+
+            // 监听来自iframe的消息
+            window.addEventListener('message', function(event) {
+                if (event.data === 'closePayment') {
+                    document.body.removeChild(iframe);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
