@@ -14,7 +14,7 @@ import javax.annotation.Resource;
 import java.util.Date;
 
 /**
- * @author Fuzhengwei bugstack.cn @小傅哥
+ * @author ywz
  * @description 拼团交易结算服务测试
  * @create 2025-01-26 18:59
  */

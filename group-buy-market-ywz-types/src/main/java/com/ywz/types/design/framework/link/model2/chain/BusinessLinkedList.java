@@ -5,7 +5,7 @@ import com.ywz.types.design.framework.link.model2.handler.ILogicLinkHandler;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 策略链的apply实现
  * @DateTime: 2025/6/4 12:06
  */
 public class BusinessLinkedList<T,D,R> extends LinkedList<ILogicLinkHandler<T, D, R>> implements ILogicLinkHandler<T,D,R> {

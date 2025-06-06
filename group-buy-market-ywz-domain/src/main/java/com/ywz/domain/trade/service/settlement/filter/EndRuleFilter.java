@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 订单支付结算规则过滤器 - 整合对象的结束节点
  * @DateTime: 2025/6/5 15:13
  */
 @Service

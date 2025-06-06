@@ -4,7 +4,7 @@ import org.apache.commons.lang3.ObjectUtils;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 策略链的链表实现
  * @DateTime: 2025/6/4 11:07
  */
 public class LinkedList<E> implements ILink<E> {

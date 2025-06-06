@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 交易锁单规则过滤链工厂类
  * @DateTime: 2025/6/4 16:47
  */
 @Service
@@ -26,7 +26,7 @@ public class TradeLockRuleFilterFactory {
     public BusinessLinkedList<TradeLockRuleCommandEntity, TradeLockRuleFilterFactory.DynamicContext, TradeLockRuleFilterBackEntity> tradeRuleFilter(
             ActivityUsabilityRuleFilter activityUsabilityRuleFilter, UserTakeLimitRuleFilter userTakeLimitRuleFilter
             ){
-        LinkArmory<TradeLockRuleCommandEntity, DynamicContext, TradeLockRuleFilterBackEntity> linkArmory = new LinkArmory<>("交易规则过滤链"
+        LinkArmory<TradeLockRuleCommandEntity, DynamicContext, TradeLockRuleFilterBackEntity> linkArmory = new LinkArmory<>("交易锁单规则过滤链"
                 , activityUsabilityRuleFilter, userTakeLimitRuleFilter);
         return linkArmory.getBusinessLinkedList();
     }

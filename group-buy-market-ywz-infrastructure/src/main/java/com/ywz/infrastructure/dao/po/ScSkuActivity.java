@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 渠道来源活动商品关联PO
  * @DateTime: 2025/6/2 16:11
  */
 @Data

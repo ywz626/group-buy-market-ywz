@@ -10,7 +10,7 @@ import javax.annotation.Resource;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 调用外部接口进行拼团回调通知的服务
  * @DateTime: 2025/6/5 21:13
  */
 @Service

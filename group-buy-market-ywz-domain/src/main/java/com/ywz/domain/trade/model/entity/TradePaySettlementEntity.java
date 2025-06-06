@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 交易支付结算实体对象
  * @DateTime: 2025/6/4 21:07
  */
 @Data

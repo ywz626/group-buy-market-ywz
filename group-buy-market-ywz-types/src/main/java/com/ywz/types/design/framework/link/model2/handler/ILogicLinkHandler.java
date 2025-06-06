@@ -2,7 +2,7 @@ package com.ywz.types.design.framework.link.model2.handler;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 策略链的控制器
  * @DateTime: 2025/6/4 12:11
  */
 public interface ILogicLinkHandler<T, D, R> {

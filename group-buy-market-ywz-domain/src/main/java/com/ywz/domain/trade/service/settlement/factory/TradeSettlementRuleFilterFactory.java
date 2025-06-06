@@ -32,7 +32,7 @@ public class TradeSettlementRuleFilterFactory {
     public BusinessLinkedList<TradeSettlementRuleCommandEntity,TradeSettlementRuleFilterFactory.DynamicContext, TradeSettlementRuleFilterBackEntity> tradeSettlementRuleFilter(
             SCRuleFilter scRuleFilter, SettableRuleFilter settableRuleFilter, OutTradeNoRuleFilter outTradeNoRuleFilter, EndRuleFilter endRuleFilter
             ) {
-        LinkArmory<TradeSettlementRuleCommandEntity, DynamicContext, TradeSettlementRuleFilterBackEntity> filter = new LinkArmory<>("tradeSettlementRuleFilter"
+        LinkArmory<TradeSettlementRuleCommandEntity, DynamicContext, TradeSettlementRuleFilterBackEntity> filter = new LinkArmory<>("交易支付订单规则过滤链"
                 , scRuleFilter, outTradeNoRuleFilter, settableRuleFilter, endRuleFilter);
         return filter.getBusinessLinkedList();
     }

@@ -13,7 +13,7 @@ import javax.annotation.Resource;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: Trade领域的对外接口实现
  * @DateTime: 2025/6/5 21:16
  */
 @Service
@@ -25,6 +25,12 @@ public class TradePort implements ITradePort {
     @Resource
     private IRedisService redisService;
 
+    /**
+     * 包装订单支付完成后的异步回调接口
+     * @param notifyTask 通知任务实体
+     * @return 通知结果
+     * @throws Exception
+     */
     @Override
     public String groupBuyNotify(NotifyTaskEntity notifyTask) throws Exception {
         RLock lock = redisService.getLock(notifyTask.lockKey());

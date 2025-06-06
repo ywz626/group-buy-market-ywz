@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 执行回调任务数据访问对象
  * @DateTime: 2025/6/4 21:04
  */
 @Mapper

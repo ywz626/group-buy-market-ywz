@@ -1,6 +1,5 @@
 package com.ywz.test.infrastructure.dao;
 
-import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ywz.infrastructure.dao.IGroupBuyActivityDao;
@@ -14,7 +13,7 @@ import java.util.List;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 测试拼团活动数据
  * @DateTime: 2025/5/31 17:46
  */
 @SpringBootTest

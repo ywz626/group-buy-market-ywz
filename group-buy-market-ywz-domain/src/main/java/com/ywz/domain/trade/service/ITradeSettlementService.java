@@ -7,11 +7,18 @@ import java.util.Map;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 订单支付结算服务接口
  * @DateTime: 2025/6/4 21:13
  */
 public interface ITradeSettlementService {
 
+    /**
+     * 执行结算
+     *
+     * @param tradePaySuccessEntity 交易支付成功实体
+     * @return 结算实体
+     * @throws Exception 异常
+     */
     TradePaySettlementEntity settlementMarketPayOrder(TradePaySuccessEntity tradePaySuccessEntity) throws Exception;
 
     Map<String, Integer> execSettlementNotifyJob(String teamId) throws Exception;

@@ -31,8 +31,6 @@ import java.util.concurrent.*;
 public class MarketNode extends AbstractGroupBuyMarketSupport<MarketProductEntity, DefaultActivityStrategyFactory.DynamicContext, TrialBalanceEntity> {
 
     @Resource
-    private EndNode endNode;
-    @Resource
     private ErrorNode errorNode;
     @Resource
     private TagNode tagNode;

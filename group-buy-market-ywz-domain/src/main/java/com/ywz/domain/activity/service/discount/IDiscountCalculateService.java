@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 折扣计算服务接口
  * @DateTime: 2025/6/1 21:28
  */
 public interface IDiscountCalculateService {

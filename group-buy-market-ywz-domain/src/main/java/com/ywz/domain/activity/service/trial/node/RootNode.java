@@ -17,7 +17,7 @@ import javax.annotation.Resource;
 
 /**
  * @author 于汶泽
- * @Description: 根节点
+ * @Description: 拼团试算根节点
  * @DateTime: 2025/6/1 15:23
  */
 @Service

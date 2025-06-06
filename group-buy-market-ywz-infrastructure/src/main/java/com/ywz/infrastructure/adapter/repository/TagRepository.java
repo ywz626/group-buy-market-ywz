@@ -2,8 +2,6 @@ package com.ywz.infrastructure.adapter.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
-import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.ywz.domain.tag.adapter.repository.ITagRepository;
 import com.ywz.domain.tag.model.entity.CrowdTagsJobEntity;
 import com.ywz.infrastructure.dao.ICrowdTagsDao;
@@ -15,14 +13,13 @@ import com.ywz.infrastructure.dao.po.CrowdTagsJob;
 import com.ywz.infrastructure.redis.IRedisService;
 import org.redisson.api.RBitSet;
 import org.redisson.api.RTransaction;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 人群标签相关仓储服务
  * @DateTime: 2025/6/2 13:10
  */
 @Repository

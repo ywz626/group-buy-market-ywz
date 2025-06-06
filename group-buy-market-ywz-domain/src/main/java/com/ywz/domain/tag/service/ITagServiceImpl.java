@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: 把人群标签写入数据库和redis中
  * @DateTime: 2025/6/2 13:29
  */
 @Service

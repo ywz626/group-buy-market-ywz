@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * @author 于汶泽
- * @Description: TODO
+ * @Description: OKHttpClient配置类
  * @DateTime: 2025/6/5 21:11
  */
 @Configuration
