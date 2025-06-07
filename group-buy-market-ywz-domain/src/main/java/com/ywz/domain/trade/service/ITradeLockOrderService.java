@@ -11,7 +11,7 @@ import com.ywz.domain.trade.model.valobj.GroupBuyProgressVO;
  * @Description: 订单交易服务接口
  * @DateTime: 2025/6/3 19:06
  */
-public interface ITradeOrderService {
+public interface ITradeLockOrderService {
 
     /**
      * 查询未支付的营销订单

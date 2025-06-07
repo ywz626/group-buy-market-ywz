@@ -21,4 +21,15 @@ public interface IGroupBuyOrderListDao extends BaseMapper<com.ywz.infrastructure
      * @return 用户拼单明细列表
      */
     List<String> selectAllOutTradeNoByTeamId(String teamId);
+
+    /**
+     * 查询用户拼单明细列表
+     * @param activityId 活动Id
+     * @param userId 用户Id
+     * @param count 要查询的数量
+     * @return 用户拼单明细列表
+     */
+    List<GroupBuyOrderList> getOrderDetailList(Long activityId, String userId, int count);
+
+    List<GroupBuyOrderList> getRandomOrderDetailList(Long activityId, String userId, int randomCount);
 }

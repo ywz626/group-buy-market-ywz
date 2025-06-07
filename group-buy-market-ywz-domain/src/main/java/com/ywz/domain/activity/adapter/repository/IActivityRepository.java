@@ -1,8 +1,12 @@
 package com.ywz.domain.activity.adapter.repository;
 
 
+import com.ywz.domain.activity.model.entity.UserGroupBuyOrderDetailEntity;
 import com.ywz.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
 import com.ywz.domain.activity.model.valobj.SkuVO;
+import com.ywz.domain.activity.model.valobj.TeamStatisticVO;
+
+import java.util.List;
 
 /**
  * @author 于汶泽
@@ -39,4 +43,19 @@ public interface IActivityRepository {
     boolean downgradeSwitch();
 
     boolean cutRange(String userId);
+
+    TeamStatisticVO queryGroupTeamStatistic(Long activityId);
+
+    /**
+     * 查询用户拼团明细数据
+     *
+     * @param activityId 活动ID
+     * @param userId 用户ID
+     * @param count 个人数量
+     * @return 用户拼团明细数据
+     */
+    List<UserGroupBuyOrderDetailEntity> getMyOrderDetailList(Long activityId, String userId,int count);
+
+
+    List<UserGroupBuyOrderDetailEntity> getRandomOrderDetailList(Long activityId, String userId, int randomCount);
 }

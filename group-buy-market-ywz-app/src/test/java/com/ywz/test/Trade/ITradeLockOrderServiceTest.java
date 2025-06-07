@@ -6,7 +6,7 @@ import com.ywz.api.dto.LockMarketPayOrderRequestDTO;
 import com.ywz.api.dto.LockMarketPayOrderResponseDTO;
 import com.ywz.api.response.Response;
 import com.ywz.domain.activity.service.IIndexGroupBuyMarketService;
-import com.ywz.domain.trade.service.ITradeOrderService;
+import com.ywz.domain.trade.service.ITradeLockOrderService;
 import com.ywz.trigger.http.MarketTradeController;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -31,7 +31,7 @@ public class ITradeLockOrderServiceTest {
     private IIndexGroupBuyMarketService indexGroupBuyMarketService;
 
     @Resource
-    private ITradeOrderService tradeOrderService;
+    private ITradeLockOrderService tradeOrderService;
     @Resource
     private MarketTradeController controller;
 

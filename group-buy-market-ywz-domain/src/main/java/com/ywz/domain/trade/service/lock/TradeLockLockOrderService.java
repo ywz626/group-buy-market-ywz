@@ -4,7 +4,7 @@ import com.ywz.domain.trade.adapter.repository.ITradeRepository;
 import com.ywz.domain.trade.model.aggregate.GroupBuyOrderAggregate;
 import com.ywz.domain.trade.model.entity.*;
 import com.ywz.domain.trade.model.valobj.GroupBuyProgressVO;
-import com.ywz.domain.trade.service.ITradeOrderService;
+import com.ywz.domain.trade.service.ITradeLockOrderService;
 import com.ywz.domain.trade.service.lock.factory.TradeLockRuleFilterFactory;
 import com.ywz.types.design.framework.link.model2.chain.BusinessLinkedList;
 import org.springframework.stereotype.Service;
@@ -18,14 +18,14 @@ import javax.annotation.Resource;
  * @DateTime: 2025/6/3 19:07
  */
 @Service
-public class TradeLockOrderService implements ITradeOrderService {
+public class TradeLockLockOrderService implements ITradeLockOrderService {
 
     private final ITradeRepository tradeRepository;
 
     @Resource(name = "tradeLockRuleFilter")
     private BusinessLinkedList<TradeLockRuleCommandEntity, TradeLockRuleFilterFactory.DynamicContext, TradeLockRuleFilterBackEntity> tradeLockRuleFilter;
 
-    public TradeLockOrderService(ITradeRepository tradeRepository) {
+    public TradeLockLockOrderService(ITradeRepository tradeRepository) {
         this.tradeRepository = tradeRepository;
     }
 

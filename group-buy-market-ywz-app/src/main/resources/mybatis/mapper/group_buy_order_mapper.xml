@@ -18,7 +18,34 @@
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
-
+    <select id="getAllTeamUserCount" resultType="java.lang.Integer">
+        select sum(lock_count) from group_buy_order
+        <where>
+            activity_id = #{activityId}
+            and status in (0, 1)
+        </where>
+    </select>
+    <select id="getAllTeamCompleteCount" resultType="java.lang.Integer">
+        select count(id) from group_buy_order
+        <where>
+            activity_id = #{activityId}
+            and status = 1
+        </where>
+    </select>
+    <select id="getAllTeamCount" resultType="java.lang.Integer">
+        select count(id) from group_buy_order
+        <where>
+            activity_id = #{activityId}
+        and status in (0, 1)
+        </where>
+    </select>
+    <!--    <select id="getTeamIdsByActivityId" resultType="java.lang.Long">-->
+<!--        select count(id) from group_buy_order-->
+<!--        <where>-->
+<!--            activity_id = #{activityId}-->
+<!--            and status in (0, 1)-->
+<!--        </where>-->
+<!--    </select>-->
 
 
 </mapper>

@@ -3,6 +3,8 @@ package com.ywz.api;
 
 import com.ywz.api.dto.LockMarketPayOrderRequestDTO;
 import com.ywz.api.dto.LockMarketPayOrderResponseDTO;
+import com.ywz.api.dto.SettlementMarketPayOrderRequestDTO;
+import com.ywz.api.dto.SettlementMarketPayOrderResponseDTO;
 import com.ywz.api.response.Response;
 
 /**
@@ -14,4 +16,5 @@ public interface IMarketTradeService {
 
     Response<LockMarketPayOrderResponseDTO> lockMarketPayOrder(LockMarketPayOrderRequestDTO lockMarketPayOrderRequestDTO);
 
+    Response<SettlementMarketPayOrderResponseDTO> settlementMarketPayOrder(SettlementMarketPayOrderRequestDTO requestDTO);
 }

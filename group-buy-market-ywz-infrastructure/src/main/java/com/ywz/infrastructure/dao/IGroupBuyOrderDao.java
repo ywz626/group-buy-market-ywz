@@ -3,6 +3,9 @@ package com.ywz.infrastructure.dao;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.ywz.infrastructure.dao.po.GroupBuyOrder;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
 
 /**
  * @author Fuzhengwei bugstack.cn @小傅哥
@@ -12,6 +15,12 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface IGroupBuyOrderDao extends BaseMapper<GroupBuyOrder> {
 
+    Integer getAllTeamUserCount(Long activityId);
+
+    Integer getAllTeamCompleteCount(Long activityId);
+
+    Integer getAllTeamCount(Long activityId);
 
 
+//    List<Long> getTeamIdsByActivityId(Long activityId);
 }
