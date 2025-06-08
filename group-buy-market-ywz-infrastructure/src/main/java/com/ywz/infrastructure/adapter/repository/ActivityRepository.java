@@ -2,12 +2,14 @@ package com.ywz.infrastructure.adapter.repository;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ywz.domain.activity.adapter.repository.IActivityRepository;
+import com.ywz.domain.activity.model.entity.BuyOrderListEntity;
 import com.ywz.domain.activity.model.entity.UserGroupBuyOrderDetailEntity;
 import com.ywz.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
 import com.ywz.domain.activity.model.valobj.SkuVO;
 import com.ywz.domain.activity.model.valobj.TeamStatisticVO;
 import com.ywz.infrastructure.dao.*;
 import com.ywz.infrastructure.dao.po.*;
+import com.ywz.infrastructure.dao.po.base.Page;
 import com.ywz.infrastructure.dcc.DCCService;
 import com.ywz.infrastructure.redis.IRedisService;
 import lombok.extern.slf4j.Slf4j;
@@ -184,6 +186,45 @@ public class ActivityRepository implements IActivityRepository {
         return userGroupBuyOrderDetailEntities;
     }
 
+    @Override
+    public List<BuyOrderListEntity> queryBuyOrderListByUserId(String userId) {
+        List<GroupBuyOrderList> groupBuyOrderLists = groupBuyOrderListDao.selectList(Wrappers.<GroupBuyOrderList>lambdaQuery()
+                .eq(GroupBuyOrderList::getUserId, userId))
+                .stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        List<BuyOrderListEntity> responseData = new ArrayList<>();
+        for (GroupBuyOrderList groupBuyOrderList : groupBuyOrderLists) {
+            String goodsId = groupBuyOrderList.getGoodsId();
+            String goodsName = skuDao.selectOne(Wrappers.<Sku>lambdaQuery()
+                    .eq(Sku::getGoodsId, goodsId)).getGoodsName();
+            log.info("查询的日期：{}", groupBuyOrderList.getCreateTime());
+            BuyOrderListEntity buyOrderListEntity = BuyOrderListEntity.builder()
+                    .goodName(goodsName)
+                    .tradeCreateTime(groupBuyOrderList.getCreateTime())
+                    .outTradeNo(groupBuyOrderList.getOutTradeNo())
+                    .build();
+            Integer status = groupBuyOrderList.getStatus();
+            if(status == 0){
+                buyOrderListEntity.setStatus(0);
+                buyOrderListEntity.setUserNo(null);
+            }if(status == 1){
+                GroupBuyOrder groupBuyOrder = groupBuyOrderDao.selectOne(Wrappers.<GroupBuyOrder>lambdaQuery()
+                        .eq(GroupBuyOrder::getTeamId, groupBuyOrderList.getTeamId())
+                        .eq(GroupBuyOrder::getActivityId, groupBuyOrderList.getActivityId()));
+                if(groupBuyOrder.getStatus() == 0){
+                    buyOrderListEntity.setStatus(1);
+                    buyOrderListEntity.setUserNo(groupBuyOrder.getTargetCount()- groupBuyOrder.getLockCount());
+                }else {
+                    buyOrderListEntity.setStatus(groupBuyOrder.getStatus());
+                    buyOrderListEntity.setUserNo(null);
+                }
+            }
+            responseData.add(buyOrderListEntity);
+        }
+        return responseData;
+    }
+
     /**
      * 提取公共方法：获取用户拼团订单详情实体列表
      * @param groupBuyOrderLists
@@ -197,6 +238,7 @@ public class ActivityRepository implements IActivityRepository {
         if( teamIds.isEmpty()) {
             return null;
         }
+        log.info("查询的teamIds：{}", teamIds);
         List<GroupBuyOrder> groupBuyOrderList = groupBuyOrderDao.selectList(Wrappers.<GroupBuyOrder>lambdaQuery()
                 .apply("target_count > lock_count")
                 .eq(GroupBuyOrder::getStatus, 0)
@@ -204,12 +246,17 @@ public class ActivityRepository implements IActivityRepository {
         if( groupBuyOrderList == null || groupBuyOrderList.isEmpty()) {
             return null;
         }
+        log.info("查询的拼团订单信息：{}", groupBuyOrderList);
         Map<String, GroupBuyOrder> groupBuyOrders = groupBuyOrderList.stream()
                 .collect(Collectors.toMap(GroupBuyOrder::getTeamId, groupBuyOrder -> groupBuyOrder));
-
+        log.info("查询的拼团订单信息Map：{}", groupBuyOrders);
         List<UserGroupBuyOrderDetailEntity> unionList = new ArrayList<>();
         for (GroupBuyOrderList orderDetail : groupBuyOrderLists) {
             String teamId = orderDetail.getTeamId();
+            if (teamId == null || teamId.isEmpty()) {
+                continue; // 跳过无效的teamId
+            }
+            log.info("查询的拼团订单信息teamId：{}", teamId);
             GroupBuyOrder groupBuyOrder = groupBuyOrders.get(teamId);
             UserGroupBuyOrderDetailEntity build = UserGroupBuyOrderDetailEntity.builder()
                     .completeCount(groupBuyOrder.getCompleteCount())

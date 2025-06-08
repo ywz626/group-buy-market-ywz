@@ -5,7 +5,6 @@ import com.ywz.domain.activity.model.entity.MarketProductEntity;
 import com.ywz.domain.activity.model.entity.TrialBalanceEntity;
 import com.ywz.domain.activity.service.trial.factory.DefaultActivityStrategyFactory;
 import com.ywz.types.design.framework.tree.AbstractMulThreadStrategyRouter;
-import com.ywz.types.design.framework.tree.AbstractStrategyRouter;
 
 import javax.annotation.Resource;
 import java.util.concurrent.ExecutionException;

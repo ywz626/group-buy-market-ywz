@@ -88,10 +88,10 @@
         </div>
         <div class="payment-content">
             <div class="payment-amount">
-                支付金额 <span class="amount-value">¥40</span>
+                支付金额 <span class="amount-value" id="paymentAmount">¥0</span>
             </div>
             <div class="qr-code">
-                二维码
+                <img src="images/sku-13811216-04.png" alt="支付二维码" style="width: 100%; height: 100%;">
             </div>
         </div>
         <div class="payment-footer">
@@ -101,6 +101,19 @@
     </div>
 
     <script>
+        // 全局变量
+        let params = getUrlParams();
+        let orderId = "";
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置支付金额
+            document.getElementById('paymentAmount').textContent = `¥${params.price || '0'}`;
+            
+            // 调用锁单接口
+            lockOrder();
+        });
+        
         // 获取URL参数
         function getUrlParams() {
             const params = {};
@@ -114,6 +127,95 @@
             
             return params;
         }
+        
+        // 锁单接口调用
+        function lockOrder() {
+            const type = params.type || 'single';
+            const teamId = params.teamId || '';
+            const goodsId = params.goodsId || '9890001';
+            const userId = params.userId || 'ywz';
+            const outTradeNo = params.outTradeNo || '';
+            
+            // 构建URL
+            const url = `http://localhost:8091/api/v1/gbm/trade/lock_market_pay_order?userId=${userId}&teamId=${teamId}&activityId=100123&goodsId=${goodsId}&source=s01&channel=c01&outTradeNo=${outTradeNo}&notifyUrl=http%3A%2F%2F127.0.0.1%3A8091%2Fapi%2Fv1%2Ftest%2Fgroup_buy_notify`;
+            
+            // 发送请求
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Accept': '*/*',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
+                    'Host': 'localhost:8091',
+                    'User-Agent': 'PostmanRuntime-ApipostRuntime/1.1.0'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === "0000") {
+                    // 保存订单ID
+                    orderId = data.data.orderId;
+                    console.log('锁单成功，订单ID:', orderId);
+                } else {
+                    console.error('锁单失败:', data.info);
+                    alert('锁单失败: ' + data.info);
+                }
+            })
+            .catch(error => {
+                console.error('请求出错:', error);
+                alert('锁单请求出错，请重试');
+            });
+        }
+        
+        // 结算接口调用
+        function settlementOrder() {
+            const userId = params.userId || 'ywz';
+            const outTradeNo = params.outTradeNo || '';
+            
+            // 获取当前时间，格式化为ISO字符串
+            const now = new Date();
+            const outTradeTime = now.toISOString().slice(0, 19);
+            
+            // 发送请求
+            fetch('http://localhost:8091/api/v1/gbm/trade/settlement_market_pay_order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': '*/*',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
+                    'Host': 'localhost:8091',
+                    'User-Agent': 'PostmanRuntime-ApipostRuntime/1.1.0'
+                },
+                body: JSON.stringify({
+                    "source": "s01",
+                    "channel": "c01",
+                    "userId": userId,
+                    "outTradeNo": outTradeNo,
+                    "outTradeTime": outTradeTime
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === "0000") {
+                    console.log('结算成功:', data.data);
+                    alert('支付成功！');
+                    
+                    // 通知父窗口关闭支付弹窗并刷新页面
+                    window.parent.postMessage('closePayment', '*');
+                    window.parent.postMessage('refreshPage', '*');
+                } else {
+                    console.error('结算失败:', data.info);
+                    alert('支付失败: ' + data.info);
+                }
+            })
+            .catch(error => {
+                console.error('请求出错:', error);
+                alert('支付请求出错，请重试');
+            });
+        }
 
         // 取消按钮点击事件
         document.getElementById('cancelBtn').addEventListener('click', function() {
@@ -123,19 +225,8 @@
 
         // 确认按钮点击事件
         document.getElementById('confirmBtn').addEventListener('click', function() {
-            // 获取支付类型
-            const params = getUrlParams();
-            const type = params.type || 'single';
-            
-            // 在实际应用中，这里应该发送请求到服务器处理支付
-            // 这里简化处理，直接显示支付成功
-            alert('支付成功！');
-            
-            // 通知父窗口关闭支付弹窗
-            window.parent.postMessage('closePayment', '*');
-            
-            // 刷新父页面以更新状态
-            window.parent.location.reload();
+            // 调用结算接口
+            settlementOrder();
         });
     </script>
 </body>

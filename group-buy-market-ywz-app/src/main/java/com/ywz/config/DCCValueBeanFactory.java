@@ -10,12 +10,10 @@ import org.redisson.api.RedissonClient;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.Resource;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,8 +37,8 @@ public class DCCValueBeanFactory implements BeanPostProcessor {
     /**
      * 在运行时动态更新 DCC 配置值
      */
-    @Bean
-    public RTopic dccRedisTopicListener(RedissonClient redissonClient, BeanFactory beanFactory) {
+    @Bean("dccTopic")
+    public RTopic dccRedisTopicListener(RedissonClient redissonClient) {
         RTopic topic = redissonClient.getTopic("group_buy_market_dcc");
         topic.addListener(String.class, (charSequence, s) -> {
             String[] split = s.split(Constants.SPLIT);

@@ -1,6 +1,7 @@
 package com.ywz.domain.activity.service;
 
 import com.ywz.domain.activity.adapter.repository.IActivityRepository;
+import com.ywz.domain.activity.model.entity.BuyOrderListEntity;
 import com.ywz.domain.activity.model.entity.MarketProductEntity;
 import com.ywz.domain.activity.model.entity.TrialBalanceEntity;
 import com.ywz.domain.activity.model.entity.UserGroupBuyOrderDetailEntity;
@@ -58,5 +59,11 @@ public class IndexGroupBuyMarketServiceImpl implements IIndexGroupBuyMarketServi
             }
         }
         return list;
+    }
+
+    @Override
+    public List<BuyOrderListEntity> queryOrderListByUserId(String userId) {
+        List<BuyOrderListEntity> buyOrderListEntity = repository.queryBuyOrderListByUserId(userId);
+        return buyOrderListEntity;
     }
 }

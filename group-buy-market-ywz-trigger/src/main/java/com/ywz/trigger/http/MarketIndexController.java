@@ -2,9 +2,12 @@ package com.ywz.trigger.http;
 
 import com.alibaba.fastjson.JSON;
 import com.ywz.api.IMarketIndexService;
+import com.ywz.api.dto.BuyOrderListRequestDTO;
+import com.ywz.api.dto.BuyOrderListResponseDTO;
 import com.ywz.api.dto.GoodsMarketRequestDTO;
 import com.ywz.api.dto.GoodsMarketResponseDTO;
 import com.ywz.api.response.Response;
+import com.ywz.domain.activity.model.entity.BuyOrderListEntity;
 import com.ywz.domain.activity.model.entity.MarketProductEntity;
 import com.ywz.domain.activity.model.entity.TrialBalanceEntity;
 import com.ywz.domain.activity.model.entity.UserGroupBuyOrderDetailEntity;
@@ -36,7 +39,7 @@ public class MarketIndexController implements IMarketIndexService {
 
     @Override
     @PostMapping("query_group_buy_market_config")
-    public Response<GoodsMarketResponseDTO> queryGroupBuyMarketConfig(@RequestBody GoodsMarketRequestDTO goodsMarketRequestDTO){
+    public Response<GoodsMarketResponseDTO> queryGroupBuyMarketConfig(@RequestBody GoodsMarketRequestDTO goodsMarketRequestDTO) {
         try {
             String goodsId = goodsMarketRequestDTO.getGoodsId();
             String userId = goodsMarketRequestDTO.getUserId();
@@ -61,7 +64,7 @@ public class MarketIndexController implements IMarketIndexService {
             TeamStatisticVO teamStatisticVO = indexGroupBuyMarketService.queryGroupTeamStatistic(activityId);
 
             // 获取队伍信息
-            List<UserGroupBuyOrderDetailEntity> team = indexGroupBuyMarketService.getTeamList(activityId,userId,1,2);
+            List<UserGroupBuyOrderDetailEntity> team = indexGroupBuyMarketService.getTeamList(activityId, userId, 1, 2);
 
             List<GoodsMarketResponseDTO.Team> teams = new ArrayList<>();
             if (null != team && !team.isEmpty()) {
@@ -112,5 +115,32 @@ public class MarketIndexController implements IMarketIndexService {
                     .build();
         }
 
+    }
+
+    @Override
+    @GetMapping("query_group_buy_order_list")
+    public Response<List<BuyOrderListResponseDTO>> queryGroupBuyMarketOrderList(BuyOrderListRequestDTO requestDTO) {
+        try {
+            List<BuyOrderListEntity> buyOrderListEntity = indexGroupBuyMarketService.queryOrderListByUserId(requestDTO.getUserId());
+            List<BuyOrderListResponseDTO> responseData = new ArrayList<>();
+            for (BuyOrderListEntity entity : buyOrderListEntity) {
+                BuyOrderListResponseDTO data = BuyOrderListResponseDTO.builder()
+                        .goodName(entity.getGoodName())
+                        .tradeCreateTime(entity.getTradeCreateTime())
+                        .userNo(entity.getUserNo())
+                        .status(entity.getStatus())
+                        .outTradeNo(entity.getOutTradeNo())
+                        .build();
+                responseData.add(data);
+            }
+            Response<List<BuyOrderListResponseDTO>> response = Response.<List<BuyOrderListResponseDTO>>builder()
+                    .code(ResponseCode.SUCCESS.getCode())
+                    .info(ResponseCode.SUCCESS.getInfo())
+                    .data(responseData)
+                    .build();
+            return response;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

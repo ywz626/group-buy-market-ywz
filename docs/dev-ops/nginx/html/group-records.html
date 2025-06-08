@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>我的拼团记录</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin:0; background: #f5f5f5; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+        .header {
+            background: linear-gradient(90deg, #ffb347 0%, #ff8000 100%);
+            color: #fff;
+            padding: 32px 0 18px 0;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            position: relative;
+        }
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border-radius: 20px;
+            margin: -18px auto 18px auto;
+            width: 90%;
+            box-shadow: 0 2px 8px rgba(255,128,0,0.08);
+            padding: 6px 12px;
+        }
+        .search-bar input {
+            border: none;
+            outline: none;
+            flex: 1;
+            font-size: 15px;
+            background: transparent;
+        }
+        .search-bar button {
+            background: #ff8000;
+            color: #fff;
+            border: none;
+            border-radius: 16px;
+            padding: 6px 18px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .group-list {
+            margin: 0 auto;
+            width: 92%;
+        }
+        .group-item {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+            padding: 14px 12px;
+        }
+        .group-item img {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            margin-right: 14px;
+            object-fit: cover;
+            background: #f5f5f5;
+        }
+        .group-info {
+            flex: 1;
+        }
+        .group-title {
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .group-status {
+            font-size: 13px;
+            color: #ff8000;
+            margin-bottom: 2px;
+        }
+        .group-meta {
+            font-size: 12px;
+            color: #888;
+        }
+        .status-finish { color: #4caf50; }
+        .status-progress { color: #2196f3; }
+        .status-unpaid { color: #e02e24; cursor:pointer; text-decoration:underline; }
+        .status-fail { color: #999; }
+        .back-btn {
+            position: absolute;
+            left: 16px;
+            top: 32px;
+            color: #fff;
+            font-size: 18px;
+            text-decoration: none;
+            background: rgba(255,128,0,0.2);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .back-btn:hover {
+            background: #ff8000;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <a href="index.html" class="back-btn" title="返回首页">&#8592;</a>
+    我的拼团
+</div>
+<div class="search-bar">
+    <input type="text" id="searchInput" placeholder="搜索拼团">
+    <button onclick="searchGroup()">搜索</button>
+</div>
+<div class="group-list" id="groupList">
+    <!-- 拼团记录项将由JS动态生成 -->
+</div>
+<script>
+    // 状态映射
+    const statusMap = {
+        0: {text: '未支付', type: 'unpaid'},
+        1: {text: '进行中', type: 'progress'},
+        2: {text: '已完成', type: 'finish'},
+        3: {text: '已失败', type: 'fail'}
+    };
+
+    function formatDate(ts) {
+        if (!ts) return '';
+        const d = new Date(ts);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function renderList(list) {
+        const groupList = document.getElementById('groupList');
+        groupList.innerHTML = '';
+        if (!list || list.length === 0) {
+            groupList.innerHTML = '<div style="text-align:center;color:#ff8000;padding:40px 0;">暂无拼团记录</div>';
+            return;
+        }
+        list.forEach((item, idx) => {
+            const statusObj = statusMap[item.status] || {text: '未知', type: 'fail'};
+            let statusHtml = `<span class="group-status status-${statusObj.type}">${statusObj.text}</span>`;
+            // 未支付可点击
+            if (item.status === 0) {
+                statusHtml = `<a href="javascript:void(0);" class="group-status status-unpaid" onclick="payNow(${idx}, this)">未支付</a>`;
+            }
+            // 进行中显示还差几人
+            let meta = formatDate(item.tradeCreateTime);
+            if (item.status === 1 && item.userNo != null) {
+                meta += ` | 还差${item.userNo}人成团`;
+            }
+            groupList.innerHTML += `
+            <div class="group-item">
+                <img src="images/sku-13811216-01.png" alt="商品图">
+                <div class="group-info">
+                    <div class="group-title">${item.goodName || ''}</div>
+                    <div>${statusHtml}</div>
+                    <div class="group-meta">${meta}</div>
+                </div>
+            </div>
+        `;
+        });
+    }
+
+    function searchGroup() {
+        const keyword = document.getElementById('searchInput').value.trim();
+        if (!window._groupRecords) return;
+        if (!keyword) {
+            renderList(window._groupRecords);
+            return;
+        }
+        const filtered = window._groupRecords.filter(item => (item.goodName || '').includes(keyword));
+        renderList(filtered);
+    }
+
+    // 支付
+    function payNow(idx, el) {
+        const item = window._groupRecords[idx];
+        if (!item) return;
+        el.textContent = '支付中...';
+        el.style.pointerEvents = 'none';
+        // 获取当前时间，格式化为ISO字符串
+        const now = new Date();
+        const outTradeTime = now.toISOString().slice(0, 19);
+        fetch('http://localhost:8091/api/v1/gbm/trade/settlement_market_pay_order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': '*/*',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'Host': 'localhost:8091',
+                'User-Agent': 'PostmanRuntime-ApipostRuntime/1.1.0'
+            },
+            body: JSON.stringify({
+                source: "s01",
+                channel: "c01",
+                userId: item.userId,
+                outTradeNo: item.outTradeNo,
+                outTradeTime: outTradeTime
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.code === "0000") {
+                    alert('支付成功！');
+                    // 刷新页面数据
+                    fetchRecords();
+                } else {
+                    alert('支付失败：' + (data.info || '未知错误'));
+                    el.textContent = '未支付';
+                    el.style.pointerEvents = '';
+                }
+            })
+            .catch(() => {
+                alert('支付请求异常');
+                el.textContent = '未支付';
+                el.style.pointerEvents = '';
+            });
+    }
+
+    // 获取userId
+    function getUserId() {
+        // 优先从cookie取
+        const match = document.cookie.match(/userInfo=([^;]+)/);
+        if (match) {
+            try {
+                return JSON.parse(decodeURIComponent(match[1])).username;
+            } catch(e) {}
+        }
+        return 'ywz';
+    }
+
+    // 页面初始化时拉取后端数据
+    function fetchRecords() {
+        const userId = getUserId();
+        fetch(`http://localhost:8091/api/v1/gbm/index/query_group_buy_order_list?userId=${userId}`, {
+            method: 'GET',
+            headers: {
+                'Accept': '*/*',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'Host': 'localhost:8091',
+                'User-Agent': 'PostmanRuntime-ApipostRuntime/1.1.0'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.code === "0000") {
+                    // 这里补充userId到每条数据，便于支付接口调用
+                    (data.data || []).forEach(item => { item.userId = userId; });
+                    window._groupRecords = data.data || [];
+                    renderList(window._groupRecords);
+                } else {
+                    window._groupRecords = [];
+                    renderList([]);
+                }
+            })
+            .catch(() => {
+                window._groupRecords = [];
+                renderList([]);
+            });
+    }
+
+    // 页面加载
+    window.addEventListener('DOMContentLoaded', function() {
+        fetchRecords();
+    });
+</script>
+</body>
+</html>

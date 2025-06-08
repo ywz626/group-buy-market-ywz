@@ -193,6 +193,23 @@
             font-size: 16px;
             cursor: pointer;
         }
+        .group-record-link {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255,128,0,0.95);
+            color: #fff;
+            padding: 7px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            text-decoration: none;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: background 0.2s;
+        }
+        .group-record-link:hover {
+            background: #e02e24;
+        }
     </style>
 </head>
 <body>
@@ -201,13 +218,13 @@
         <div class="swiper">
             <div class="swiper-wrapper">
                 <div class="swiper-slide">
-                    <img src="https://bugstack.cn/images/article/product/book/mybatis-03.png?raw=true" alt="商品图片1">
+                    <img src="images/sku-13811216-01.png" alt="商品图片1">
                 </div>
                 <div class="swiper-slide">
-                    <img src="https://bugstack.cn/images/article/product/book/mybatis-03.png?raw=true" alt="商品图片2">
+                    <img src="images/sku-13811216-02.png" alt="商品图片2">
                 </div>
                 <div class="swiper-slide">
-                    <img src="https://bugstack.cn/images/article/product/book/mybatis-03.png?raw=true" alt="商品图片3">
+                    <img src="images/sku-13811216-03.png" alt="商品图片3">
                 </div>
             </div>
             <div class="swiper-pagination">
@@ -215,45 +232,32 @@
                 <div class="swiper-pagination-bullet"></div>
                 <div class="swiper-pagination-bullet"></div>
             </div>
+            <!-- 拼团记录按钮 -->
+            <a href="group-records.html" class="group-record-link">拼团记录</a>
         </div>
 
         <!-- 商品信息 -->
         <div class="product-info">
             <h1 class="product-title">手写MyBatis：渐进式源码实践 (全彩)</h1>
-            <div class="promotion-tag">大促优惠！直降 ¥60, 76人拼团，参与马上抢到</div>
+            <div class="promotion-tag" id="promotionTag">大促优惠！直降 ¥0, 0人拼团，参与马上抢到</div>
             <div class="price-container">
-                <span class="current-price">¥100</span>
-                <span class="original-price">¥80</span>
+                <span class="current-price" id="currentPrice">¥0</span>
+                <span class="original-price" id="originalPrice">¥0</span>
             </div>
         </div>
 
         <!-- 拼团信息 -->
         <div class="group-buy-info">
             <div class="group-buy-title">拼团进行中，可直接参与</div>
-            <div class="group-buy-list">
-                <div class="group-buy-item">
-                    <div class="avatar">小</div>
-                    <div class="user-info">
-                        <div class="user-name">小傅哥</div>
-                        <div class="countdown">拼单即将结束 00:05:49</div>
-                    </div>
-                    <button class="join-btn">立即抢单</button>
-                </div>
-                <div class="group-buy-item">
-                    <div class="avatar">李</div>
-                    <div class="user-info">
-                        <div class="user-name">李二狗</div>
-                        <div class="countdown">拼单即将结束 00:05:49</div>
-                    </div>
-                    <button class="join-btn">立即抢单</button>
-                </div>
+            <div class="group-buy-list" id="groupBuyList">
+                <!-- 拼团列表将通过JavaScript动态生成 -->
             </div>
         </div>
 
         <!-- 底部购买栏 -->
         <div class="bottom-bar">
             <div class="price-info">
-                <div class="bottom-price">¥100</div>
+                <div class="bottom-price" id="bottomPrice">¥0</div>
             </div>
             <button class="buy-btn" id="singleBuyBtn">单独购买</button>
             <button class="group-buy-btn" id="groupBuyBtn">开团购买</button>
@@ -261,6 +265,122 @@
     </div>
 
     <script>
+        // 全局变量，存储商品和拼团信息
+        let goodsData = null;
+        let teamListData = null;
+        let teamStatisticData = null;
+        let goodsId = "9890001";
+        let userId = getCookie('userInfo') ? JSON.parse(getCookie('userInfo')).username : "ywz";
+        let selectedTeamId = "";
+        
+        // 页面加载完成后获取商品信息
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchGoodsInfo();
+        });
+        
+        // 获取商品信息
+        function fetchGoodsInfo() {
+            fetch('http://localhost:8091/api/v1/gbm/index/query_group_buy_market_config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': '*/*',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
+                    'Host': 'localhost:8091',
+                    'User-Agent': 'PostmanRuntime-ApipostRuntime/1.1.0'
+                },
+                body: JSON.stringify({
+                    "userId": userId,
+                    "source": "s01",
+                    "channel": "c01",
+                    "goodsId": goodsId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === "0000") {
+                    // 保存数据到全局变量
+                    goodsData = data.data.goods;
+                    teamListData = data.data.teamList;
+                    teamStatisticData = data.data.teamStatistic;
+                    
+                    // 更新页面显示
+                    updateProductInfo();
+                    updateTeamList();
+                } else {
+                    console.error('获取商品信息失败:', data.info);
+                }
+            })
+            .catch(error => {
+                console.error('请求出错:', error);
+            });
+        }
+        
+        // 更新商品信息
+        function updateProductInfo() {
+            if (!goodsData) return;
+            
+            // 更新价格信息
+            document.getElementById('currentPrice').textContent = `¥${goodsData.payPrice}`;
+            document.getElementById('originalPrice').textContent = `¥${goodsData.originalPrice}`;
+            document.getElementById('bottomPrice').textContent = `¥${goodsData.payPrice}`;
+            
+            // 更新促销标签
+            const userCount = teamStatisticData ? teamStatisticData.allTeamUserCount : 0;
+            document.getElementById('promotionTag').textContent = 
+                `大促优惠！直降 ¥${goodsData.deductionPrice}, ${userCount}人拼团，参与马上抢到`;
+        }
+        
+        // 更新拼团列表
+        function updateTeamList() {
+            const groupBuyList = document.getElementById('groupBuyList');
+            groupBuyList.innerHTML = '';
+            
+            if (!teamListData || teamListData.length === 0) {
+                // 如果没有拼团数据，显示提示信息
+                const noTeamTip = document.createElement('div');
+                noTeamTip.className = 'no-team-tip';
+                noTeamTip.textContent = '小伙伴，赶紧去开团吧，做村里最靓的仔。';
+                noTeamTip.style.padding = '20px 0';
+                noTeamTip.style.textAlign = 'center';
+                noTeamTip.style.color = '#ff8000';
+                groupBuyList.appendChild(noTeamTip);
+                return;
+            }
+            
+            // 遍历拼团列表，创建拼团项
+            teamListData.forEach(team => {
+                const remainingCount = team.targetCount - team.lockCount;
+                const item = document.createElement('div');
+                item.className = 'group-buy-item';
+                item.innerHTML = `
+                    <div class="avatar">${team.userId.charAt(0)}</div>
+                    <div class="user-info">
+                        <div class="user-name">${team.userId}</div>
+                        <div class="countdown">拼单即将结束 ${team.validTimeCountdown}，还差${remainingCount}人</div>
+                    </div>
+                    <button class="join-btn" data-team-id="${team.teamId}">立即抢单</button>
+                `;
+                groupBuyList.appendChild(item);
+            });
+            
+            // 为新添加的按钮绑定事件
+            document.querySelectorAll('.join-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const teamId = this.getAttribute('data-team-id');
+                    selectedTeamId = teamId;
+                    const user = checkLogin();
+                    if (!user) {
+                        window.location.href = 'login.html?redirect=index.html&type=join';
+                    } else {
+                        showPaymentPopup('join', teamId);
+                    }
+                });
+            });
+        }
+        
         // 轮播图逻辑
         const swiper = document.querySelector('.swiper-wrapper');
         const bullets = document.querySelectorAll('.swiper-pagination-bullet');
@@ -300,6 +420,23 @@
             return null;
         }
 
+        // 生成12位纯数字订单号
+        // 生成12位纯数字订单号
+        function generateOutTradeNo() {
+
+            const timestamp = Date.now().toString(); // 当前时间戳（13位）
+            const randomPart = Math.floor(Math.random() * 8999 + 1000).toString(); // 4位随机数
+             // 截取前12位
+            return (timestamp + randomPart).substring(0, 12);
+            // const now = new Date();
+            // const year = now.getFullYear();
+            // const month = String(now.getMonth() + 1).padStart(2, '0');
+            // const day = String(now.getDate()).padStart(2, '0');
+            // // 生成12位随机数字（范围：100000000000 - 999999999999）
+            // const random = Math.floor(Math.random() * 900000000000 + 100000000000);
+            // return `${year}${month}${day}${random}`;
+        }
+
         // 购买按钮点击事件
         document.getElementById('singleBuyBtn').addEventListener('click', function() {
             const user = checkLogin();
@@ -319,23 +456,14 @@
             }
         });
 
-        // 拼团按钮点击事件
-        document.querySelectorAll('.join-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const user = checkLogin();
-                if (!user) {
-                    window.location.href = 'login.html?redirect=index.html&type=join';
-                } else {
-                    showPaymentPopup('join');
-                }
-            });
-        });
-
         // 显示支付弹窗
-        function showPaymentPopup(type) {
+        function showPaymentPopup(type, teamId = '') {
+            // 生成订单号
+            const outTradeNo = generateOutTradeNo();
+            
             // 创建一个iframe来加载支付页面
             const iframe = document.createElement('iframe');
-            iframe.src = `payment.html?type=${type}`;
+            iframe.src = `payment.html?type=${type}&teamId=${teamId}&goodsId=${goodsId}&userId=${userId}&outTradeNo=${outTradeNo}&price=${type === 'single' ? goodsData.originalPrice : goodsData.payPrice}`;
             iframe.style.position = 'fixed';
             iframe.style.top = '0';
             iframe.style.left = '0';
@@ -349,6 +477,9 @@
             window.addEventListener('message', function(event) {
                 if (event.data === 'closePayment') {
                     document.body.removeChild(iframe);
+                } else if (event.data === 'refreshPage') {
+                    // 刷新页面以更新状态
+                    fetchGoodsInfo();
                 }
             });
         }

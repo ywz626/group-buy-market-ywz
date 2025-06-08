@@ -1,5 +1,6 @@
 package com.ywz.domain.activity.service;
 
+import com.ywz.domain.activity.model.entity.BuyOrderListEntity;
 import com.ywz.domain.activity.model.entity.MarketProductEntity;
 import com.ywz.domain.activity.model.entity.TrialBalanceEntity;
 import com.ywz.domain.activity.model.entity.UserGroupBuyOrderDetailEntity;
@@ -26,4 +27,6 @@ public interface IIndexGroupBuyMarketService {
     TeamStatisticVO queryGroupTeamStatistic(Long activityId);
 
     List<UserGroupBuyOrderDetailEntity> getTeamList(Long activityId, String userId,int ownerCount, int randomCount) ;
+
+    List<BuyOrderListEntity> queryOrderListByUserId(String userId);
 }

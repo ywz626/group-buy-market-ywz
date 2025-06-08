@@ -1,6 +1,7 @@
 package com.ywz.domain.activity.adapter.repository;
 
 
+import com.ywz.domain.activity.model.entity.BuyOrderListEntity;
 import com.ywz.domain.activity.model.entity.UserGroupBuyOrderDetailEntity;
 import com.ywz.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
 import com.ywz.domain.activity.model.valobj.SkuVO;
@@ -58,4 +59,7 @@ public interface IActivityRepository {
 
 
     List<UserGroupBuyOrderDetailEntity> getRandomOrderDetailList(Long activityId, String userId, int randomCount);
+
+    List<BuyOrderListEntity> queryBuyOrderListByUserId(String userId);
+
 }
