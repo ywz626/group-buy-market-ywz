@@ -14,7 +14,7 @@ import java.util.Date;
 
 /**
  * @author 于汶泽
- * @Description: 结束节点
+ * @Description: 判断时间是否在可设置时间范围内的规则过滤器
  * @DateTime: 2025/6/5 15:13
  */
 @Service

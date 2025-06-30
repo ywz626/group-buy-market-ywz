@@ -79,6 +79,9 @@ public class MarketTradeController implements IMarketTradeService {
                         .orderId(marketPayOrderEntity.getOrderId())
                         .deductionPrice(marketPayOrderEntity.getDeductionPrice())
                         .tradeOrderStatus(marketPayOrderEntity.getTradeOrderStatusEnumVO().getCode())
+                        .payPrice(marketPayOrderEntity.getPayPrice())
+                        .originalPrice(marketPayOrderEntity.getOriginalPrice())
+                        .deductionPrice(marketPayOrderEntity.getDeductionPrice())
                         .build();
 
                 log.info("交易锁单记录(存在):{} marketPayOrderEntity:{}", userId, JSON.toJSONString(marketPayOrderEntity));

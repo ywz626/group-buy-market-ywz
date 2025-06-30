@@ -47,6 +47,8 @@ public class GroupBuyOrderList extends Page {
     private BigDecimal originalPrice;
     /** 折扣金额 */
     private BigDecimal deductionPrice;
+    /** 支付价格 */
+    private BigDecimal payPrice;
     /** 唯一业务ID */
     @TableField("biz_id")
     private String bizId;

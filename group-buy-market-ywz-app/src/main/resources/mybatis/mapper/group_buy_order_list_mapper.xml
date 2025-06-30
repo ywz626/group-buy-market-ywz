@@ -15,6 +15,7 @@
         <result column="channel" property="channel"/>
         <result column="original_price" property="originalPrice"/>
         <result column="deduction_price" property="deductionPrice"/>
+        <result column="pay_price" property="payPrice"/>
         <result column="status" property="status"/>
         <result column="out_trade_no" property="outTradeNo"/>
         <result column="create_time" property="createTime"/>
