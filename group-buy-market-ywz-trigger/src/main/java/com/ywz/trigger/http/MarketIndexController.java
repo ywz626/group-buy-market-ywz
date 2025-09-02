@@ -33,7 +33,6 @@ import java.util.List;
 @CrossOrigin("*")
 @RequestMapping("/api/v1/gbm/index/")
 public class MarketIndexController implements IMarketIndexService {
-
     @Resource
     private IIndexGroupBuyMarketService indexGroupBuyMarketService;
 
@@ -92,6 +91,7 @@ public class MarketIndexController implements IMarketIndexService {
                             .originalPrice(trialBalanceEntity.getOriginalPrice())
                             .build())
                     .teamList(teams)
+                    .activityId(trialBalanceEntity.getGroupBuyActivityDiscountVO().getActivityId())
                     .teamStatistic(GoodsMarketResponseDTO.TeamStatistic.builder()
                             .allTeamCompleteCount(teamStatisticVO.getAllTeamCompleteCount())
                             .allTeamUserCount(teamStatisticVO.getAllTeamUserCount())

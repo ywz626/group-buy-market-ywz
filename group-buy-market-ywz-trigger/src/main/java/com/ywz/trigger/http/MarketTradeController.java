@@ -54,7 +54,7 @@ public class MarketTradeController implements IMarketTradeService {
     @Override
     @Transactional(rollbackFor = Exception.class, timeout = 500)
     @PostMapping("lock_market_pay_order")
-    public Response<LockMarketPayOrderResponseDTO> lockMarketPayOrder(LockMarketPayOrderRequestDTO lockMarketPayOrderRequestDTO) {
+    public Response<LockMarketPayOrderResponseDTO> lockMarketPayOrder(@RequestBody LockMarketPayOrderRequestDTO lockMarketPayOrderRequestDTO) {
         try {
             String userId = lockMarketPayOrderRequestDTO.getUserId();
             String source = lockMarketPayOrderRequestDTO.getSource();
@@ -65,7 +65,8 @@ public class MarketTradeController implements IMarketTradeService {
             String teamId = lockMarketPayOrderRequestDTO.getTeamId();
             String notifyUrl = lockMarketPayOrderRequestDTO.getNotifyUrl();
 
-            if (StringUtils.isBlank(userId) || StringUtils.isBlank(source) || StringUtils.isBlank(channel) || StringUtils.isBlank(goodsId) || StringUtils.isBlank(goodsId) || null == activityId) {
+            if (StringUtils.isBlank(userId) || StringUtils.isBlank(source) || StringUtils.isBlank(channel) || StringUtils.isBlank(goodsId) || null == activityId) {
+                log.error("错误参数：{}",lockMarketPayOrderRequestDTO);
                 return Response.<LockMarketPayOrderResponseDTO>builder()
                         .code(ResponseCode.ILLEGAL_PARAMETER.getCode())
                         .info(ResponseCode.ILLEGAL_PARAMETER.getInfo())
@@ -180,7 +181,7 @@ public class MarketTradeController implements IMarketTradeService {
         // 支付业务
         try {
             log.info("营销交易组队结算开始:{} outTradeNo:{}", requestDTO.getUserId(), requestDTO.getOutTradeNo());
-
+            log.info("{}",requestDTO);
             if (StringUtils.isBlank(requestDTO.getUserId()) || StringUtils.isBlank(requestDTO.getSource()) || StringUtils.isBlank(requestDTO.getChannel()) || StringUtils.isBlank(requestDTO.getOutTradeNo()) || null == requestDTO.getOutTradeTime()) {
                 return Response.<SettlementMarketPayOrderResponseDTO>builder()
                         .code(ResponseCode.ILLEGAL_PARAMETER.getCode())

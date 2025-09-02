@@ -22,6 +22,7 @@ public class NotifyRequestDTO {
 
     public String groupBuyNotify(String url, String json) {
         try {
+            log.info("拼团完成结算回调接口被调用！！！！！！！！！");
             // 1. 构建参数
             MediaType mediaType = MediaType.parse("application/json");
             RequestBody body = RequestBody.create(mediaType, json);
