@@ -36,6 +36,9 @@ public class NotifyRequestDTO {
             Response response = okHttpClient.newCall(request).execute();
 
             // 3. 返回结果
+            if(!response.isSuccessful()){
+                return "error";
+            }
             return response.body().string();
         } catch (Exception e) {
             log.error("拼团回调 HTTP 接口服务异常 {}", url, e);

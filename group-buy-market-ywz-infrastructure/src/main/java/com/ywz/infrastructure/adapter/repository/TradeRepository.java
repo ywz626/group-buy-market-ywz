@@ -265,6 +265,15 @@ public class TradeRepository implements ITradeRepository {
                 put("outTradeNoList", outTradeNoList);
             }}));
             notifyTaskDao.insert(notifyTask);
+            // 更新拼团订单状态为已完成
+            // TODO
+            int updateForGroupBuy = groupBuyOrderDao.update(Wrappers.<GroupBuyOrder>lambdaUpdate()
+                    .setSql("status = 1")
+                    .eq(GroupBuyOrder::getTeamId, groupBuyTeamEntity.getTeamId()));
+            if (updateForGroupBuy != 1) {
+                // 订单更新失败
+                throw new AppException(ResponseCode.UPDATE_ZERO);
+            }
             return true;
         }
         return false;
