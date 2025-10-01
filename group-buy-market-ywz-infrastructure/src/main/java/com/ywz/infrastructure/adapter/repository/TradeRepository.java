@@ -102,7 +102,7 @@ public class TradeRepository implements ITradeRepository {
                     .deductionPrice(payDiscountEntity.getDeductionPrice())
                     .payPrice(payDiscountEntity.getDeductionPrice())
                     .notifyUrl(payDiscountEntity.getNotifyConfig().getNotifyUrl())
-                    .notifyType(payDiscountEntity.getNotifyConfig().getNotifyType())
+                    .notifyType(payDiscountEntity.getNotifyConfig().getNotifyType().getCode())
                     .targetCount(payActivityEntity.getTargetCount())
                     .completeCount(0)
                     .validStartTime(new Date())

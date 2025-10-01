@@ -13,6 +13,7 @@ import com.ywz.domain.activity.service.IIndexGroupBuyMarketService;
 import com.ywz.domain.trade.model.entity.*;
 import com.ywz.domain.trade.model.valobj.GroupBuyProgressVO;
 import com.ywz.domain.trade.model.valobj.NotifyConfigVO;
+import com.ywz.domain.trade.model.valobj.NotifyTypeEnumVO;
 import com.ywz.domain.trade.service.ITradeLockOrderService;
 import com.ywz.domain.trade.service.ITradeSettlementService;
 import com.ywz.types.enums.ResponseCode;
@@ -147,7 +148,7 @@ public class MarketTradeController implements IMarketTradeService {
                             .outTradeNo(outTradeNo)
                             .notifyConfig(NotifyConfigVO.builder()
                                     .notifyMQ(notifyConfig.getNotifyMQ())
-                                    .notifyType(notifyConfig.getNotifyType())
+                                    .notifyType(NotifyTypeEnumVO.valueOf(notifyConfig.getNotifyType()))
                                     .notifyUrl(notifyConfig.getNotifyUrl())
                                     .build())
                             .build());

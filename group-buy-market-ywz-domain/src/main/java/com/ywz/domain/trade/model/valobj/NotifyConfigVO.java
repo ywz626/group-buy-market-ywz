@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NotifyConfigVO {
-    private String notifyType;
+    private NotifyTypeEnumVO notifyType;
     private String notifyMQ;
     private String notifyUrl;
 }
