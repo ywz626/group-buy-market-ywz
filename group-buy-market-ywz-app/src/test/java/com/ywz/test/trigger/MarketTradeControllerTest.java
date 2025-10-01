@@ -29,14 +29,15 @@ public class MarketTradeControllerTest {
     private IMarketTradeService marketTradeService;
 
     @Test
-    public void test_lockMarketPayOrder() {
+    public void test_lockMarketPayOrder_mq() throws InterruptedException {
         LockMarketPayOrderRequestDTO lockMarketPayOrderRequestDTO = new LockMarketPayOrderRequestDTO();
-        lockMarketPayOrderRequestDTO.setUserId("ywz03");
-        lockMarketPayOrderRequestDTO.setTeamId("81695441");
+        lockMarketPayOrderRequestDTO.setUserId("ywz01");
+        lockMarketPayOrderRequestDTO.setTeamId(null);
         lockMarketPayOrderRequestDTO.setActivityId(100123L);
         lockMarketPayOrderRequestDTO.setGoodsId("9890001");
         lockMarketPayOrderRequestDTO.setSource("s01");
         lockMarketPayOrderRequestDTO.setChannel("c01");
+        lockMarketPayOrderRequestDTO.setNotifyMQ();
         lockMarketPayOrderRequestDTO.setOutTradeNo(RandomStringUtils.randomNumeric(12));
 
         Response<LockMarketPayOrderResponseDTO> lockMarketPayOrderResponseDTOResponse = marketTradeService.lockMarketPayOrder(lockMarketPayOrderRequestDTO);

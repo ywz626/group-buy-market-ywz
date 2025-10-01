@@ -12,6 +12,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @author ywz
@@ -31,12 +32,15 @@ public class TradeSettlementOrderServiceTest {
         TradePaySuccessEntity tradePaySuccessEntity = new TradePaySuccessEntity();
         tradePaySuccessEntity.setSource("s01");
         tradePaySuccessEntity.setChannel("c01");
-        tradePaySuccessEntity.setUserId("ywz02");
-        tradePaySuccessEntity.setOutTradeNo("059806297346");
+        tradePaySuccessEntity.setUserId("ywz01");
+        tradePaySuccessEntity.setOutTradeNo("609043188580");
         tradePaySuccessEntity.setOutTradeTime(new Date());
         TradePaySettlementEntity tradePaySettlementEntity = tradeSettlementOrderService.settlementMarketPayOrder(tradePaySuccessEntity);
         log.info("请求参数:{}", JSON.toJSONString(tradePaySuccessEntity));
         log.info("测试结果:{}", JSON.toJSONString(tradePaySettlementEntity));
+
+        // 暂停，等待MQ消息。处理完后，手动关闭程序
+        new CountDownLatch(1).await();
     }
 
 }

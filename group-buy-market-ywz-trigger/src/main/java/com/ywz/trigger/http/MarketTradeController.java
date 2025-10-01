@@ -51,8 +51,8 @@ public class MarketTradeController implements IMarketTradeService {
     /**
      * 进行锁单操作
      *
-     * @param lockMarketPayOrderRequestDTO 锁单请求参数
-     * @return
+     * @param lockMarketPayOrderRequestDTO 锁单请求参数，包含用户ID、来源、渠道、商品ID、活动ID、外部交易号、拼团ID及通知配置等信息
+     * @return 响应结果，包含锁单成功后的订单信息或错误码和提示信息
      */
     @Override
     @Transactional(rollbackFor = Exception.class, timeout = 500)
@@ -68,6 +68,8 @@ public class MarketTradeController implements IMarketTradeService {
             String teamId = lockMarketPayOrderRequestDTO.getTeamId();
             LockMarketPayOrderRequestDTO.NotifyConfigVO notifyConfig = lockMarketPayOrderRequestDTO.getNotifyConfig();
 
+            // 参数校验：userId、source、channel、goodsId、activityId不能为空；
+            // 若通知类型为HTTP，则notifyUrl也不能为空
             if (StringUtils.isBlank(userId) || StringUtils.isBlank(source) || StringUtils.isBlank(channel) || StringUtils.isBlank(goodsId) || null == activityId || ("HTTP".equals(notifyConfig.getNotifyType()) && StringUtils.isBlank(notifyConfig.getNotifyUrl()))) {
                 return Response.<LockMarketPayOrderResponseDTO>builder()
                         .code(ResponseCode.ILLEGAL_PARAMETER.getCode())
@@ -75,7 +77,7 @@ public class MarketTradeController implements IMarketTradeService {
                         .build();
             }
 
-            // 查询是否存在交易订单
+            // 查询是否存在未支付的交易订单
             MarketPayOrderEntity marketPayOrderEntity = tradeOrderService.queryNoPayMarketPayOrderByOutTradeNo(userId, outTradeNo);
             if (null != marketPayOrderEntity) {
                 LockMarketPayOrderResponseDTO lockMarketPayOrderResponseDTO = LockMarketPayOrderResponseDTO.builder()
@@ -95,8 +97,8 @@ public class MarketTradeController implements IMarketTradeService {
                         .build();
             }
 
+            // 拼团目标人数已满则拒绝锁单
             if (!StringUtils.isBlank(teamId)) {
-                // 查询拼团活动
                 GroupBuyProgressVO groupBuyProgressVO = tradeOrderService.queryGroupBuyProgress(teamId);
                 if (null != groupBuyProgressVO && Objects.equals(groupBuyProgressVO.getTargetCount(), groupBuyProgressVO.getLockCount())) {
                     log.info("交易锁单拦截-拼单目标已达成:{} {}", userId, teamId);
@@ -106,7 +108,8 @@ public class MarketTradeController implements IMarketTradeService {
                             .build();
                 }
             }
-            // 执行优惠逻辑，前面判断是否是同一个订单，判断是否拼团目标已达成都通过了，开始业务逻辑
+
+            // 执行优惠逻辑，获取商品试算结果
             TrialBalanceEntity trialBalanceEntity = indexGroupBuyMarketService.indexMarketTrial(MarketProductEntity.builder()
                     .channel(channel)
                     .goodsId(goodsId)
@@ -114,7 +117,7 @@ public class MarketTradeController implements IMarketTradeService {
                     .userId(userId)
                     .build());
 
-            // 人群限定 必须要在redis中标记的人群才能进
+            // 校验人群限定条件（是否可见、是否启用）
             if (!trialBalanceEntity.getIsVisible() || !trialBalanceEntity.getIsEnable()) {
                 log.info("交易锁单拦截-人群限定:{} {}", userId, goodsId);
                 return Response.<LockMarketPayOrderResponseDTO>builder()
@@ -124,8 +127,8 @@ public class MarketTradeController implements IMarketTradeService {
             }
 
             GroupBuyActivityDiscountVO groupBuyActivityDiscountVO = trialBalanceEntity.getGroupBuyActivityDiscountVO();
-            // 构建锁单请求对象
-            // 执行过滤
+
+            // 构造锁单请求对象并执行锁单操作
             marketPayOrderEntity = tradeOrderService.lockMarketPayOrder(
                     UserEntity.builder().userId(userId).build(),
                     PayActivityEntity.builder()
@@ -155,7 +158,7 @@ public class MarketTradeController implements IMarketTradeService {
 
             log.info("交易锁单记录(新):{} marketPayOrderEntity:{}", userId, JSON.toJSONString(marketPayOrderEntity));
 
-            // 返回结果
+            // 返回锁单成功的响应数据
             return Response.<LockMarketPayOrderResponseDTO>builder()
                     .code(ResponseCode.SUCCESS.getCode())
                     .info(ResponseCode.SUCCESS.getInfo())
@@ -182,6 +185,18 @@ public class MarketTradeController implements IMarketTradeService {
         }
     }
 
+
+    /**
+     * 营销交易组队结算接口
+     * <p>
+     * 该方法用于处理营销活动中的支付订单结算逻辑。接收客户端传递的支付信息，
+     * 并调用服务层进行结算操作，最终返回结算结果。
+     * </p>
+     *
+     * @param requestDTO 包含结算所需参数的请求对象，包括用户ID、来源、渠道、外部交易号及交易时间等字段
+     * @return 返回封装了结算结果的响应对象，包含用户ID、队伍ID、活动ID和外部交易号等信息；
+     *         若参数非法或发生异常，则返回对应的错误码与提示信息
+     */
     @RequestMapping(value = "settlement_market_pay_order", method = RequestMethod.POST)
     @Override
     public Response<SettlementMarketPayOrderResponseDTO> settlementMarketPayOrder(@RequestBody SettlementMarketPayOrderRequestDTO requestDTO) {
@@ -189,6 +204,8 @@ public class MarketTradeController implements IMarketTradeService {
         try {
             log.info("营销交易组队结算开始:{} outTradeNo:{}", requestDTO.getUserId(), requestDTO.getOutTradeNo());
             log.info("{}", requestDTO);
+
+            // 参数校验：确保必要字段不为空
             if (StringUtils.isBlank(requestDTO.getUserId()) || StringUtils.isBlank(requestDTO.getSource()) || StringUtils.isBlank(requestDTO.getChannel()) || StringUtils.isBlank(requestDTO.getOutTradeNo()) || null == requestDTO.getOutTradeTime()) {
                 return Response.<SettlementMarketPayOrderResponseDTO>builder()
                         .code(ResponseCode.ILLEGAL_PARAMETER.getCode())
@@ -196,6 +213,7 @@ public class MarketTradeController implements IMarketTradeService {
                         .build();
             }
 
+            // 构建支付成功实体并执行结算操作
             TradePaySettlementEntity tradePaySettlementEntity = tradeSettlementService.settlementMarketPayOrder(TradePaySuccessEntity.builder()
                     .outTradeTime(requestDTO.getOutTradeTime())
                     .outTradeNo(requestDTO.getOutTradeNo())
@@ -204,6 +222,8 @@ public class MarketTradeController implements IMarketTradeService {
                     .source(requestDTO.getSource())
                     .userId(requestDTO.getUserId())
                     .build());
+
+            // 封装结算响应数据
             SettlementMarketPayOrderResponseDTO responseDTO = SettlementMarketPayOrderResponseDTO.builder()
                     .userId(tradePaySettlementEntity.getUserId())
                     .teamId(tradePaySettlementEntity.getTeamId())
@@ -211,7 +231,7 @@ public class MarketTradeController implements IMarketTradeService {
                     .outTradeNo(tradePaySettlementEntity.getOutTradeNo())
                     .build();
 
-            // 返回结果
+            // 构造成功响应结果
             Response<SettlementMarketPayOrderResponseDTO> response = Response.<SettlementMarketPayOrderResponseDTO>builder()
                     .code(ResponseCode.SUCCESS.getCode())
                     .info(ResponseCode.SUCCESS.getInfo())
@@ -235,4 +255,5 @@ public class MarketTradeController implements IMarketTradeService {
                     .build();
         }
     }
+
 }

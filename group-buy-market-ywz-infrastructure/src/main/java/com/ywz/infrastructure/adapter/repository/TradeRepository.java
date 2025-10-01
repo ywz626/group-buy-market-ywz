@@ -9,6 +9,8 @@ import com.ywz.domain.trade.model.aggregate.GroupBuyOrderAggregate;
 import com.ywz.domain.trade.model.aggregate.GroupBuyTeamSettlementAggregate;
 import com.ywz.domain.trade.model.entity.*;
 import com.ywz.domain.trade.model.valobj.GroupBuyProgressVO;
+import com.ywz.domain.trade.model.valobj.NotifyConfigVO;
+import com.ywz.domain.trade.model.valobj.NotifyTypeEnumVO;
 import com.ywz.domain.trade.model.valobj.TradeOrderStatusEnumVO;
 import com.ywz.infrastructure.dao.IGroupBuyActivityDao;
 import com.ywz.infrastructure.dao.IGroupBuyOrderDao;
@@ -19,6 +21,7 @@ import com.ywz.infrastructure.dao.po.GroupBuyOrder;
 import com.ywz.infrastructure.dao.po.GroupBuyOrderList;
 import com.ywz.infrastructure.dao.po.NotifyTask;
 import com.ywz.infrastructure.dcc.DCCService;
+import com.ywz.infrastructure.event.EventPublisher;
 import com.ywz.types.enums.ActivityStatusEnumVO;
 import com.ywz.types.enums.GroupBuyOrderEnumVO;
 import com.ywz.types.enums.ResponseCode;
@@ -26,6 +29,7 @@ import com.ywz.types.exception.AppException;
 import jodd.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Repository;
 import com.ywz.types.common.Constants;
@@ -53,10 +57,20 @@ public class TradeRepository implements ITradeRepository {
     private INotifyTaskDao notifyTaskDao;
     @Resource
     private DCCService dccService;
+    @Value("${spring.rabbitmq.config.producer.topic_team_success.routing_key}")
+    private String routingKey;
 
 
+    /**
+     * 根据用户ID和外部交易号查询市场锁定订单
+     *
+     * @param userId 用户ID
+     * @param outTradeNo 外部交易号
+     * @return MarketPayOrderEntity 订单实体对象，如果未找到对应订单则返回null
+     */
     @Override
     public MarketPayOrderEntity queryMarketLockOrderByOutTradeNo(String userId, String outTradeNo) {
+        // 查询团购订单列表中状态为CREATE的订单
         GroupBuyOrderList groupBuyOrderList = groupBuyOrderListDao.selectOne(new LambdaQueryWrapper<GroupBuyOrderList>()
                 .eq(GroupBuyOrderList::getUserId, userId)
                 .eq(GroupBuyOrderList::getOutTradeNo, outTradeNo)
@@ -77,6 +91,18 @@ public class TradeRepository implements ITradeRepository {
                 .build();
     }
 
+
+    /**
+     * 锁定拼团支付订单信息，并创建或更新相关拼团记录。
+     * <p>
+     * 该方法根据传入的聚合根对象判断是新建一个拼团还是加入已有拼团。如果是新团，则生成新的 teamId 并初始化拼团主表；
+     * 如果是老团，则增加锁单数（lock_count），若超出目标人数则抛出异常。
+     * 同时会插入一条拼团明细记录到 group_buy_order_list 表中。
+     *
+     * @param groupBuyOrderAggregate 包含用户、活动、优惠等信息的聚合根对象，用于构建拼团订单数据
+     * @return 返回封装好的市场支付订单实体，包含订单ID、抵扣价格、交易状态及实际支付金额
+     * @throws AppException 当拼团已满或其他业务逻辑错误时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class) // 设置事务回滚
     public MarketPayOrderEntity lockMarketPayOrder(GroupBuyOrderAggregate groupBuyOrderAggregate) {
@@ -84,15 +110,17 @@ public class TradeRepository implements ITradeRepository {
         PayActivityEntity payActivityEntity = groupBuyOrderAggregate.getPayActivityEntity();
         PayDiscountEntity payDiscountEntity = groupBuyOrderAggregate.getPayDiscountEntity();
         Integer userTakeOrderCount = groupBuyOrderAggregate.getUserTakeOrderCount();
+
         // 构建拼团订单
         String teamId = payActivityEntity.getTeamId();
         if (StringUtil.isBlank(teamId)) {
-            // 新团
+            // 新建拼团：生成唯一 teamId 和有效时间，初始化拼团主表记录
             teamId = RandomStringUtils.randomNumeric(8);
             Integer validTime = payActivityEntity.getValidTime();
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(new Date());
             calendar.add(Calendar.MINUTE, validTime);
+
             GroupBuyOrder groupBuyOrder = GroupBuyOrder.builder()
                     .teamId(teamId)
                     .activityId(payActivityEntity.getActivityId())
@@ -111,7 +139,7 @@ public class TradeRepository implements ITradeRepository {
                     .build();
             groupBuyOrderDao.insert(groupBuyOrder);
         } else {
-            // 老团 - 更新拼团订单锁定数量
+            // 加入现有拼团：更新锁定数量，如果拼团已满则抛出异常
             int updateAddLockCount = groupBuyOrderDao.update(null, new LambdaUpdateWrapper<GroupBuyOrder>()
                     .setSql(" lock_count = lock_count + 1")
                     .eq(GroupBuyOrder::getTeamId, teamId)
@@ -122,6 +150,8 @@ public class TradeRepository implements ITradeRepository {
                 throw new AppException(ResponseCode.E0005);
             }
         }
+
+        // 生成订单号并组装拼团明细记录
         String orderId = RandomStringUtils.randomNumeric(12);
         GroupBuyOrderList groupBuyOrderListReq = GroupBuyOrderList.builder()
                 .userId(userEntity.getUserId())
@@ -140,13 +170,16 @@ public class TradeRepository implements ITradeRepository {
                 .outTradeNo(payDiscountEntity.getOutTradeNo())
                 .bizId(payActivityEntity.getActivityId() + Constants.UNDERLINE + userEntity.getUserId() + Constants.UNDERLINE + (userTakeOrderCount + 1))
                 .build();
+
         try {
-            // 写入拼团记录
+            // 插入拼团明细记录
             groupBuyOrderListDao.insert(groupBuyOrderListReq);
         } catch (DuplicateKeyException e) {
+            // 处理重复键异常，防止并发导致的问题
             throw new AppException(ResponseCode.INDEX_EXCEPTION);
         }
 
+        // 封装返回结果
         return MarketPayOrderEntity.builder()
                 .orderId(orderId)
                 .deductionPrice(payDiscountEntity.getDeductionPrice())
@@ -155,10 +188,20 @@ public class TradeRepository implements ITradeRepository {
                 .build();
     }
 
+
+    /**
+     * 查询团购进度信息
+     *
+     * @param teamId 团队ID，用于查询对应的团购订单信息
+     * @return GroupBuyProgressVO 团购进度信息对象，包含目标数量、已完成数量和锁定数量
+     */
     @Override
     public GroupBuyProgressVO queryGroupBuyProgress(String teamId) {
+        // 根据团队ID查询团购订单信息
         GroupBuyOrder groupBuyOrder = groupBuyOrderDao.selectOne(new LambdaQueryWrapper<GroupBuyOrder>()
                 .eq(GroupBuyOrder::getTeamId, teamId));
+
+        // 构建并返回团购进度信息VO对象
         return GroupBuyProgressVO.builder()
                 .targetCount(groupBuyOrder.getTargetCount())
                 .completeCount(groupBuyOrder.getCompleteCount())
@@ -166,10 +209,20 @@ public class TradeRepository implements ITradeRepository {
                 .build();
     }
 
+
+    /**
+     * 根据活动ID查询团购活动实体信息
+     *
+     * @param activityId 活动ID
+     * @return GroupBuyActivityEntity 团购活动实体对象
+     */
     @Override
     public GroupBuyActivityEntity queryGroupBuyActivityEntity(Long activityId) {
+        // 查询团购活动PO对象
         GroupBuyActivityPO groupBuyActivityPO = groupBuyActivityDao.selectOne(Wrappers.<GroupBuyActivityPO>lambdaQuery()
                 .eq(GroupBuyActivityPO::getActivityId, activityId));
+
+        // 将PO对象转换为Entity对象并返回
         return GroupBuyActivityEntity.builder()
                 .activityName(groupBuyActivityPO.getActivityName())
                 .tagId(groupBuyActivityPO.getTagId())
@@ -186,17 +239,35 @@ public class TradeRepository implements ITradeRepository {
                 .build();
     }
 
+
+    /**
+     * 查询用户在指定活动中的团购订单数量
+     *
+     * @param userId 用户ID
+     * @param activityId 活动ID
+     * @return 用户在指定活动中的订单数量，如果查询结果为空则返回0
+     */
     @Override
     public Integer queryOrerCount(String userId, Long activityId) {
+        // 查询用户在指定活动中的订单数量
         Long count = groupBuyOrderListDao.selectCount(new LambdaQueryWrapper<GroupBuyOrderList>()
                 .eq(GroupBuyOrderList::getUserId, userId)
                 .eq(GroupBuyOrderList::getActivityId, activityId));
+        // 将查询结果转换为Integer类型，空值处理为0
         return count == null ? 0 : count.intValue();
     }
 
 
+
+    /**
+     * 根据团队ID查询团购团队信息
+     *
+     * @param teamId 团队ID，用于查询对应的团购订单信息
+     * @return GroupBuyTeamEntity 团购团队实体对象，包含团队的详细信息；如果未找到对应的团购订单则返回null
+     */
     @Override
     public GroupBuyTeamEntity queryGroupBuyTeam(String teamId) {
+        // 根据团队ID查询团购订单信息
         GroupBuyOrder groupBuyOrder = groupBuyOrderDao.selectOne(Wrappers.<GroupBuyOrder>lambdaQuery()
                 .eq(GroupBuyOrder::getTeamId, teamId));
 
@@ -212,25 +283,52 @@ public class TradeRepository implements ITradeRepository {
                 .lockCount(groupBuyOrder.getLockCount())
                 .targetCount(groupBuyOrder.getTargetCount())
                 .createTime(groupBuyOrder.getCreateTime())
-                .notifyUrl(groupBuyOrder.getNotifyUrl())
+                .notifyConfig(NotifyConfigVO.builder()
+                        .notifyType(NotifyTypeEnumVO.valueOf(groupBuyOrder.getNotifyType()))
+                        .notifyMQ(routingKey)
+                        .notifyUrl(groupBuyOrder.getNotifyUrl())
+                        .build())
                 .build();
     }
 
+
+    /**
+     * 更新拼单明细订单状态
+     *
+     * @param userId 用户ID
+     * @param outTradeNo 外部交易号
+     */
     @Override
     public void updateGroupBuyOrderListStatus(String userId, String outTradeNo) {
+        // 更新拼单订单状态为1(已支付)，并更新修改时间
         groupBuyOrderListDao.update(Wrappers.<GroupBuyOrderList>lambdaUpdate()
                 .setSql("status = 1, update_time = now()")
                 .eq(GroupBuyOrderList::getUserId, userId)
                 .eq(GroupBuyOrderList::getOutTradeNo, outTradeNo));
     }
 
+
+    @Resource
+    private EventPublisher eventPublisher;
+
+    /**
+     * 拼单结算
+     * <p>
+     * 该方法用于处理拼团单的支付成功后的结算逻辑。包括更新拼团明细订单状态、更新拼团主订单完成数，
+     * 若为最后一单则触发通知任务，并更新拼团主订单状态为已完成。
+     * </p>
+     *
+     * @param groupBuyTeamSettlementAggregate 包含拼团团队实体、交易支付成功信息及用户信息的聚合对象
+     * @return 是否是最后一单并完成了整个拼团（true 表示拼团已结束，false 表示仍在进行中）
+     */
     @Transactional(rollbackFor = Exception.class, timeout = 500)
     @Override
-    public boolean settlementMarketPayOrder(GroupBuyTeamSettlementAggregate groupBuyTeamSettlementAggregate) {
+    public NotifyTaskEntity settlementMarketPayOrder(GroupBuyTeamSettlementAggregate groupBuyTeamSettlementAggregate) {
         GroupBuyTeamEntity groupBuyTeamEntity = groupBuyTeamSettlementAggregate.getGroupBuyTeamEntity();
         TradePaySuccessEntity tradePaySuccessEntity = groupBuyTeamSettlementAggregate.getTradePaySuccessEntity();
         UserEntity userEntity = groupBuyTeamSettlementAggregate.getUserEntity();
-        // 更新拼团明细订单状态
+
+        // 更新当前用户的拼团明细订单状态为已支付，并记录外部交易时间
         int update = groupBuyOrderListDao.update(Wrappers.<GroupBuyOrderList>lambdaUpdate()
                 .setSql("status = 1, update_time = now() ,out_trade_time = {0}", tradePaySuccessEntity.getOutTradeTime())
                 .eq(GroupBuyOrderList::getUserId, userEntity.getUserId())
@@ -240,7 +338,7 @@ public class TradeRepository implements ITradeRepository {
             throw new AppException(ResponseCode.UPDATE_ZERO);
         }
 
-        // 更新拼团订单状态为已完成
+        // 增加拼团主订单的已完成人数计数，仅当未达到目标人数时才允许更新
         int updateOrder = groupBuyOrderDao.update(Wrappers.<GroupBuyOrder>lambdaUpdate()
                 .setSql("complete_count = complete_count + 1")
                 .apply("{0} < {1}", "complete_count", "target_count")
@@ -249,16 +347,21 @@ public class TradeRepository implements ITradeRepository {
             // 更新失败，抛出异常
             throw new AppException(ResponseCode.UPDATE_ZERO);
         }
-        // 获取外部订单号列表
+
+        // 查询该拼团下的所有外部订单编号列表
         List<String> outTradeNoList = groupBuyOrderListDao.selectAllOutTradeNoByTeamId(groupBuyTeamEntity.getTeamId());
 
+        // 判断是否是最后一单，如果是则执行最终结算流程
         if (groupBuyTeamEntity.getTargetCount() == groupBuyTeamEntity.getCompleteCount() + 1) {
-            // 最后一单 ，开始结算
+            // 构造通知任务数据并插入数据库，供后续异步通知使用
             NotifyTask notifyTask = new NotifyTask();
             notifyTask.setActivityId(groupBuyTeamEntity.getActivityId());
             notifyTask.setTeamId(groupBuyTeamEntity.getTeamId());
-            notifyTask.setNotifyUrl(groupBuyTeamEntity.getNotifyUrl());
-            log.info("notifyUrl:{}",groupBuyTeamEntity.getNotifyUrl());
+            NotifyConfigVO notifyConfig = groupBuyTeamEntity.getNotifyConfig();
+            notifyTask.setNotifyUrl(notifyConfig.getNotifyUrl());
+            notifyTask.setNotifyType(notifyConfig.getNotifyType().getCode());
+            notifyTask.setNotifyMq(notifyConfig.getNotifyMQ());
+            log.info("notifyUrl:{}", notifyConfig.getNotifyUrl());
             notifyTask.setNotifyCount(0);
             notifyTask.setNotifyStatus(0);
             notifyTask.setParameterJson(JSON.toJSONString(new HashMap<String, Object>() {{
@@ -266,8 +369,8 @@ public class TradeRepository implements ITradeRepository {
                 put("outTradeNoList", outTradeNoList);
             }}));
             notifyTaskDao.insert(notifyTask);
-            // 更新拼团订单状态为已完成
-            // TODO
+
+            // 将拼团主订单状态设置为已完成
             int updateForGroupBuy = groupBuyOrderDao.update(Wrappers.<GroupBuyOrder>lambdaUpdate()
                     .setSql("status = 1")
                     .eq(GroupBuyOrder::getTeamId, groupBuyTeamEntity.getTeamId()));
@@ -275,21 +378,49 @@ public class TradeRepository implements ITradeRepository {
                 // 订单更新失败
                 throw new AppException(ResponseCode.UPDATE_ZERO);
             }
-            return true;
+            return NotifyTaskEntity
+                    .builder()
+                    .notifyMQ(notifyTask.getNotifyMq())
+                    .notifyMQ(notifyTask.getNotifyMq())
+                    .notifyType(notifyTask.getNotifyType())
+                    .notifyUrl(notifyTask.getNotifyUrl())
+                    .teamId(notifyTask.getTeamId())
+                    .parameterJson(notifyTask.getParameterJson())
+                    .build();
         }
-        return false;
+        return null;
     }
 
+
+    /**
+     * 获取拼单有效时间
+     *
+     * @param activityId 活动ID
+     * @return 拼单活动的有效时间（单位：秒）
+     */
     @Override
     public int getActivityValidTime(Long activityId) {
         return groupBuyActivityDao.getActivityValidTime(activityId);
     }
 
+    /**
+     * 判断指定的源和渠道是否在黑名单中
+     *
+     * @param source  数据源标识
+     * @param channel 渠道标识
+     * @return true-在黑名单中，false-不在黑名单中
+     */
     @Override
     public boolean isSCBlackList(String source, String channel) {
         return dccService.isScBlackList(source, channel);
     }
 
+    /**
+     * 查询回调任务列表
+     *
+     * @param teamId 团队ID
+     * @return 回调任务实体列表
+     */
     @Override
     public List<NotifyTaskEntity> queryNotifyTaskEntityListByTeamId(String teamId) {
         NotifyTask notifyTask = notifyTaskDao.selectOne(Wrappers.<NotifyTask>lambdaQuery()
@@ -307,6 +438,12 @@ public class TradeRepository implements ITradeRepository {
         );
     }
 
+    /**
+     * 更新回调任务状态为成功
+     *
+     * @param teamId 团队ID，用于定位需要更新的回调任务
+     * @return 更新记录数，表示成功更新的回调任务数量
+     */
     @Override
     public int updateNotifyTaskStatusSuccess(String teamId) {
         return notifyTaskDao.update(Wrappers.<NotifyTask>lambdaUpdate()
@@ -314,6 +451,12 @@ public class TradeRepository implements ITradeRepository {
                 .eq(NotifyTask::getTeamId, teamId));
     }
 
+    /**
+     * 更新回调任务状态为失败
+     *
+     * @param teamId 团队ID，用于定位需要更新的回调任务
+     * @return 更新记录数，表示成功更新的任务数量
+     */
     @Override
     public int updateNotifyTaskStatusError(String teamId) {
         return notifyTaskDao.update(Wrappers.<NotifyTask>lambdaUpdate()
@@ -321,6 +464,12 @@ public class TradeRepository implements ITradeRepository {
                 .eq(NotifyTask::getTeamId, teamId));
     }
 
+    /**
+     * 更新通知任务状态重试次数
+     *
+     * @param teamId 团队ID，用于筛选需要更新的通知任务
+     * @return 返回受影响的记录数
+     */
     @Override
     public int updateNotifyTaskStatusRetry(String teamId) {
         return notifyTaskDao.update(Wrappers.<NotifyTask>lambdaUpdate()
@@ -328,6 +477,12 @@ public class TradeRepository implements ITradeRepository {
                 .eq(NotifyTask::getTeamId, teamId));
     }
 
+    /**
+     * 获取回调任务列表
+     * 根据通知状态查询通知任务，状态为0(待通知)或2(通知失败)的任务
+     *
+     * @return 通知任务实体列表
+     */
     @Override
     public List<NotifyTaskEntity> queryNotifyTaskEntityListByStatus() {
         List<NotifyTask> notifyTasks = notifyTaskDao.selectList(Wrappers.<NotifyTask>lambdaQuery()

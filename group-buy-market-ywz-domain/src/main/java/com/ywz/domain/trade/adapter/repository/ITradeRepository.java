@@ -8,7 +8,6 @@ import com.ywz.domain.trade.model.entity.MarketPayOrderEntity;
 import com.ywz.domain.trade.model.entity.NotifyTaskEntity;
 import com.ywz.domain.trade.model.valobj.GroupBuyProgressVO;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -69,7 +68,7 @@ public interface ITradeRepository {
      */
     void updateGroupBuyOrderListStatus(String userId, String outTradeNo);
 
-    boolean settlementMarketPayOrder(GroupBuyTeamSettlementAggregate groupBuyTeamSettlementAggregate);
+    NotifyTaskEntity settlementMarketPayOrder(GroupBuyTeamSettlementAggregate groupBuyTeamSettlementAggregate);
 
     /**
      * 获取活动有效时间

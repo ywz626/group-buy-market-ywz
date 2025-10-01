@@ -1,5 +1,6 @@
 package com.ywz.domain.trade.service;
 
+import com.ywz.domain.trade.model.entity.NotifyTaskEntity;
 import com.ywz.domain.trade.model.entity.TradePaySettlementEntity;
 import com.ywz.domain.trade.model.entity.TradePaySuccessEntity;
 
@@ -31,4 +32,6 @@ public interface ITradeSettlementService {
      * @throws Exception 异常
      */
     Map<String, Integer> execSettlementNotifyJob() throws Exception;
+
+    Map<String, Integer> execSettlementNotifyJob(NotifyTaskEntity notifyTask) throws Exception;
 }

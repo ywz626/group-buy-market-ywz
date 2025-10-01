@@ -1,9 +1,11 @@
 package com.ywz.domain.trade.service.settlement;
 
+import com.alibaba.fastjson.JSON;
 import com.ywz.domain.trade.adapter.port.ITradePort;
 import com.ywz.domain.trade.adapter.repository.ITradeRepository;
 import com.ywz.domain.trade.model.aggregate.GroupBuyTeamSettlementAggregate;
 import com.ywz.domain.trade.model.entity.*;
+import com.ywz.domain.trade.model.valobj.NotifyConfigVO;
 import com.ywz.domain.trade.service.ITradeSettlementService;
 import com.ywz.domain.trade.service.settlement.factory.TradeSettlementRuleFilterFactory;
 import com.ywz.types.design.framework.link.model2.chain.BusinessLinkedList;
@@ -13,10 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author 于汶泽
@@ -37,6 +37,11 @@ public class TradeSettlementOrderService implements ITradeSettlementService {
     @Resource(name = "tradeSettlementRuleFilter")
     BusinessLinkedList<TradeSettlementRuleCommandEntity, TradeSettlementRuleFilterFactory.DynamicContext, TradeSettlementRuleFilterBackEntity> tradeSettlementRuleFilter;
 
+
+    @Override
+    public Map<String, Integer> execSettlementNotifyJob(NotifyTaskEntity notifyTask) throws Exception {
+        return execSettlementNotifyJob(Collections.singletonList(notifyTask));
+    }
 
     @Override
     public Map<String, Integer> execSettlementNotifyJob(String teamId) throws Exception {
@@ -91,57 +96,76 @@ public class TradeSettlementOrderService implements ITradeSettlementService {
 
         return resultMap;
     }
-    /**
-     * 拼团支付订单结算
-     *
-     * @param tradePaySuccessEntity 支付成功实体
-     * @return TradePaySettlementEntity 交易支付结算实体
-     * @throws Exception 异常
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class, timeout = 500)
-    public TradePaySettlementEntity settlementMarketPayOrder(TradePaySuccessEntity tradePaySuccessEntity) throws Exception {
 
-        TradeSettlementRuleFilterBackEntity tradeSettlementRuleFilterBackEntity = tradeSettlementRuleFilter.apply(TradeSettlementRuleCommandEntity.builder()
-                .outTradeTime(tradePaySuccessEntity.getOutTradeTime())
-                .channel(tradePaySuccessEntity.getChannel())
-                .source(tradePaySuccessEntity.getSource())
-                .userId(tradePaySuccessEntity.getUserId())
-                .outTradeNo(tradePaySuccessEntity.getOutTradeNo())
-                .build(), new TradeSettlementRuleFilterFactory.DynamicContext());
 
-        GroupBuyTeamEntity groupBuyTeamEntity = GroupBuyTeamEntity.builder()
-                .status(tradeSettlementRuleFilterBackEntity.getStatus())
-                .targetCount(tradeSettlementRuleFilterBackEntity.getTargetCount())
-                .completeCount(tradeSettlementRuleFilterBackEntity.getCompleteCount())
-                .validEndTime(tradeSettlementRuleFilterBackEntity.getValidEndTime())
-                .activityId(tradeSettlementRuleFilterBackEntity.getActivityId())
-                .validStartTime(tradeSettlementRuleFilterBackEntity.getValidStartTime())
-                .teamId(tradeSettlementRuleFilterBackEntity.getTeamId())
-                .notifyUrl(tradeSettlementRuleFilterBackEntity.getNotifyUrl())
-                .build();
+    @Resource
+    private ThreadPoolExecutor threadPoolExecutor;
 
-        GroupBuyTeamSettlementAggregate groupBuyTeamSettlementAggregate = GroupBuyTeamSettlementAggregate.builder()
-                .userEntity(UserEntity.builder().userId(tradePaySuccessEntity.getUserId()).build())
-                .groupBuyTeamEntity(groupBuyTeamEntity)
-                .tradePaySuccessEntity(tradePaySuccessEntity)
-                .build();
-
-        // 更新拼团组队状态为已完成
-        boolean doNotifyTask = repository.settlementMarketPayOrder(groupBuyTeamSettlementAggregate);
-
-        if (doNotifyTask){
-            // 执行结算通知任务
-            Map<String, Integer> notifyResultMap = execSettlementNotifyJob(groupBuyTeamEntity.getTeamId());
-            log.info("回调通知拼团完结 result:{}", notifyResultMap);
-        }
-        return TradePaySettlementEntity.builder()
-                .outTradeNo(tradePaySuccessEntity.getOutTradeNo())
-                .userId(tradePaySuccessEntity.getUserId())
-                .activityId(groupBuyTeamEntity.getActivityId())
-                .teamId(groupBuyTeamEntity.getTeamId())
-                .channel(tradePaySuccessEntity.getChannel())
-                .source(tradePaySuccessEntity.getSource())
-                .build();
+/**
+ * 拼团支付订单结算
+ * <p>
+ * 该方法用于处理拼团场景下的支付成功后的结算逻辑。包括：
+ * - 根据支付信息获取拼团规则并构建拼团队伍实体；
+ * - 构建拼团结算聚合根对象；
+ * - 调用仓储层更新拼团状态为已完成；
+ * - 若存在通知任务，则异步执行拼团完成的通知回调。
+ *
+ * @param tradePaySuccessEntity 支付成功的交易实体，包含支付相关信息如外部交易号、用户ID、渠道等
+ * @return TradePaySettlementEntity 交易支付结算结果实体，包含结算相关的基本信息
+ * @throws Exception 结算过程中可能抛出的异常
+ */
+@Override
+@Transactional(rollbackFor = Exception.class, timeout = 500)
+public TradePaySettlementEntity settlementMarketPayOrder(TradePaySuccessEntity tradePaySuccessEntity) throws Exception {
+    // 应用拼团结算规则过滤器，获取拼团相关配置和状态信息
+    TradeSettlementRuleFilterBackEntity tradeSettlementRuleFilterBackEntity = tradeSettlementRuleFilter.apply(TradeSettlementRuleCommandEntity.builder()
+            .outTradeTime(tradePaySuccessEntity.getOutTradeTime())
+            .channel(tradePaySuccessEntity.getChannel())
+            .source(tradePaySuccessEntity.getSource())
+            .userId(tradePaySuccessEntity.getUserId())
+            .outTradeNo(tradePaySuccessEntity.getOutTradeNo())
+            .build(), new TradeSettlementRuleFilterFactory.DynamicContext());
+    // 构建拼团队伍实体
+    GroupBuyTeamEntity groupBuyTeamEntity = GroupBuyTeamEntity.builder()
+            .status(tradeSettlementRuleFilterBackEntity.getStatus())
+            .targetCount(tradeSettlementRuleFilterBackEntity.getTargetCount())
+            .completeCount(tradeSettlementRuleFilterBackEntity.getCompleteCount())
+            .validEndTime(tradeSettlementRuleFilterBackEntity.getValidEndTime())
+            .activityId(tradeSettlementRuleFilterBackEntity.getActivityId())
+            .validStartTime(tradeSettlementRuleFilterBackEntity.getValidStartTime())
+            .teamId(tradeSettlementRuleFilterBackEntity.getTeamId())
+            .notifyConfig(tradeSettlementRuleFilterBackEntity.getNotifyConfigVO())
+            .build();
+    // 构建拼团结算聚合根对象
+    GroupBuyTeamSettlementAggregate groupBuyTeamSettlementAggregate = GroupBuyTeamSettlementAggregate.builder()
+            .userEntity(UserEntity.builder().userId(tradePaySuccessEntity.getUserId()).build())
+            .groupBuyTeamEntity(groupBuyTeamEntity)
+            .tradePaySuccessEntity(tradePaySuccessEntity)
+            .build();
+    // 更新拼团组队状态为已完成，并获取是否需要执行通知任务
+    NotifyTaskEntity doNotifyTask = repository.settlementMarketPayOrder(groupBuyTeamSettlementAggregate);
+    // 如果存在通知任务，则提交到线程池异步执行回调通知
+    if (doNotifyTask != null){
+        threadPoolExecutor.execute(() -> {
+            Map<String, Integer> notifyResultMap = null;
+            try {
+                // 执行拼团完成后的回调通知任务
+                notifyResultMap = execSettlementNotifyJob(doNotifyTask);
+                log.info("回调通知拼团完结 result:{}", JSON.toJSONString(notifyResultMap));
+            } catch (Exception e) {
+                log.error("回调通知拼团完结失败 result:{}", JSON.toJSONString(notifyResultMap), e);
+                throw new RuntimeException(e);
+            }
+        });
     }
+    // 返回拼团支付结算结果实体
+    return TradePaySettlementEntity.builder()
+            .outTradeNo(tradePaySuccessEntity.getOutTradeNo())
+            .userId(tradePaySuccessEntity.getUserId())
+            .activityId(groupBuyTeamEntity.getActivityId())
+            .teamId(groupBuyTeamEntity.getTeamId())
+            .channel(tradePaySuccessEntity.getChannel())
+            .source(tradePaySuccessEntity.getSource())
+            .build();
+}
 }
