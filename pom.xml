@@ -141,6 +141,12 @@
                 <artifactId>logging-interceptor</artifactId>
                 <version>3.14.9</version>
             </dependency>
+            <!--rabbitMQ-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-amqp</artifactId>
+                <version>3.2.0</version>
+            </dependency>
 
             <!-- 工程模块 -->
             <dependency>

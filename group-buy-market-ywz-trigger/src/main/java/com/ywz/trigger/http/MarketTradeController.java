@@ -112,7 +112,7 @@ public class MarketTradeController implements IMarketTradeService {
                     .userId(userId)
                     .build());
 
-            // 人群限定
+            // 人群限定 必须要在redis中标记的人群才能进
             if(!trialBalanceEntity.getIsVisible()|| !trialBalanceEntity.getIsEnable()){
                 log.info("交易锁单拦截-人群限定:{} {}", userId, goodsId);
                 return Response.<LockMarketPayOrderResponseDTO>builder()
