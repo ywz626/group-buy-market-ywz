@@ -25,6 +25,27 @@ public class LockMarketPayOrderRequestDTO {
     // 外部交易单号
     private String outTradeNo;
 
-    private String notifyUrl;
+    private NotifyConfigVO notifyConfig;
+
+    public void setNotifyUrl(String url){
+        NotifyConfigVO notifyConfigVO = new NotifyConfigVO();
+        notifyConfigVO.setNotifyUrl(url);
+        notifyConfigVO.setNotifyType("HTTP");
+        this.notifyConfig = notifyConfigVO;
+    }
+
+    public  void setNotifyMQ(){
+        NotifyConfigVO notifyConfigVO = new NotifyConfigVO();
+        notifyConfigVO.setNotifyType("MQ");
+        this.notifyConfig = notifyConfigVO;
+    }
+
+
+    @Data
+    public static class NotifyConfigVO{
+        private String notifyType;
+        private String notifyMQ;
+        private String notifyUrl;
+    }
 
 }

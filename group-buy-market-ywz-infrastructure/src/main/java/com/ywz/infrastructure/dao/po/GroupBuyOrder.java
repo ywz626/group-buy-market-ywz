@@ -53,7 +53,8 @@ public class GroupBuyOrder {
     private Date createTime;
     /** 更新时间 */
     private Date updateTime;
-
+    /** 回调类型(MQ和HTTP) */
+    private String notifyType;
     /** 回调url */
     private String notifyUrl;
 }

@@ -1,5 +1,6 @@
 package com.ywz.domain.trade.model.entity;
 
+import com.ywz.domain.trade.model.valobj.NotifyConfigVO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,7 +36,8 @@ public class PayDiscountEntity {
     /** 外部交易单号-确保外部调用唯一幂等 */
     private String outTradeNo;
 
-    /** 回调url */
-    private String notifyUrl;
+
+    private NotifyConfigVO notifyConfig;
+
 
 }

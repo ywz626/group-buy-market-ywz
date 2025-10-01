@@ -12,6 +12,7 @@ import com.ywz.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
 import com.ywz.domain.activity.service.IIndexGroupBuyMarketService;
 import com.ywz.domain.trade.model.entity.*;
 import com.ywz.domain.trade.model.valobj.GroupBuyProgressVO;
+import com.ywz.domain.trade.model.valobj.NotifyConfigVO;
 import com.ywz.domain.trade.service.ITradeLockOrderService;
 import com.ywz.domain.trade.service.ITradeSettlementService;
 import com.ywz.types.enums.ResponseCode;
@@ -48,6 +49,7 @@ public class MarketTradeController implements IMarketTradeService {
 
     /**
      * 进行锁单操作
+     *
      * @param lockMarketPayOrderRequestDTO 锁单请求参数
      * @return
      */
@@ -63,10 +65,9 @@ public class MarketTradeController implements IMarketTradeService {
             Long activityId = lockMarketPayOrderRequestDTO.getActivityId();
             String outTradeNo = lockMarketPayOrderRequestDTO.getOutTradeNo();
             String teamId = lockMarketPayOrderRequestDTO.getTeamId();
-            String notifyUrl = lockMarketPayOrderRequestDTO.getNotifyUrl();
+            LockMarketPayOrderRequestDTO.NotifyConfigVO notifyConfig = lockMarketPayOrderRequestDTO.getNotifyConfig();
 
-            if (StringUtils.isBlank(userId) || StringUtils.isBlank(source) || StringUtils.isBlank(channel) || StringUtils.isBlank(goodsId) || null == activityId) {
-                log.error("错误参数：{}",lockMarketPayOrderRequestDTO);
+            if (StringUtils.isBlank(userId) || StringUtils.isBlank(source) || StringUtils.isBlank(channel) || StringUtils.isBlank(goodsId) || null == activityId || ("HTTP".equals(notifyConfig.getNotifyType()) && StringUtils.isBlank(notifyConfig.getNotifyUrl()))) {
                 return Response.<LockMarketPayOrderResponseDTO>builder()
                         .code(ResponseCode.ILLEGAL_PARAMETER.getCode())
                         .info(ResponseCode.ILLEGAL_PARAMETER.getInfo())
@@ -113,7 +114,7 @@ public class MarketTradeController implements IMarketTradeService {
                     .build());
 
             // 人群限定 必须要在redis中标记的人群才能进
-            if(!trialBalanceEntity.getIsVisible()|| !trialBalanceEntity.getIsEnable()){
+            if (!trialBalanceEntity.getIsVisible() || !trialBalanceEntity.getIsEnable()) {
                 log.info("交易锁单拦截-人群限定:{} {}", userId, goodsId);
                 return Response.<LockMarketPayOrderResponseDTO>builder()
                         .code(ResponseCode.E0007.getCode())
@@ -144,7 +145,11 @@ public class MarketTradeController implements IMarketTradeService {
                             .payPrice(trialBalanceEntity.getPayPrice())
                             .deductionPrice(trialBalanceEntity.getDeductionPrice())
                             .outTradeNo(outTradeNo)
-                            .notifyUrl(notifyUrl)
+                            .notifyConfig(NotifyConfigVO.builder()
+                                    .notifyMQ(notifyConfig.getNotifyMQ())
+                                    .notifyType(notifyConfig.getNotifyType())
+                                    .notifyUrl(notifyConfig.getNotifyUrl())
+                                    .build())
                             .build());
 
             log.info("交易锁单记录(新):{} marketPayOrderEntity:{}", userId, JSON.toJSONString(marketPayOrderEntity));
@@ -174,7 +179,6 @@ public class MarketTradeController implements IMarketTradeService {
                     .info(ResponseCode.UN_ERROR.getInfo())
                     .build();
         }
-
     }
 
     @RequestMapping(value = "settlement_market_pay_order", method = RequestMethod.POST)
@@ -183,7 +187,7 @@ public class MarketTradeController implements IMarketTradeService {
         // 支付业务
         try {
             log.info("营销交易组队结算开始:{} outTradeNo:{}", requestDTO.getUserId(), requestDTO.getOutTradeNo());
-            log.info("{}",requestDTO);
+            log.info("{}", requestDTO);
             if (StringUtils.isBlank(requestDTO.getUserId()) || StringUtils.isBlank(requestDTO.getSource()) || StringUtils.isBlank(requestDTO.getChannel()) || StringUtils.isBlank(requestDTO.getOutTradeNo()) || null == requestDTO.getOutTradeTime()) {
                 return Response.<SettlementMarketPayOrderResponseDTO>builder()
                         .code(ResponseCode.ILLEGAL_PARAMETER.getCode())
@@ -216,13 +220,13 @@ public class MarketTradeController implements IMarketTradeService {
             log.info("营销交易组队结算完成:{} outTradeNo:{} response:{}", requestDTO.getUserId(), requestDTO.getOutTradeNo(), JSON.toJSONString(response));
 
             return response;
-        }catch (AppException e) {
+        } catch (AppException e) {
             log.error("营销交易组队结算异常:{} LockMarketPayOrderRequestDTO:{}", requestDTO.getUserId(), JSON.toJSONString(requestDTO), e);
             return Response.<SettlementMarketPayOrderResponseDTO>builder()
                     .code(e.getCode())
                     .info(e.getInfo())
                     .build();
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.error("营销交易组队结算失败:{} LockMarketPayOrderRequestDTO:{}", requestDTO.getUserId(), JSON.toJSONString(requestDTO), e);
             return Response.<SettlementMarketPayOrderResponseDTO>builder()
                     .code(ResponseCode.UN_ERROR.getCode())

@@ -27,6 +27,10 @@ public class NotifyTask {
 
     private String teamId;
 
+    private String notifyType;
+
+    private String notifyMq;
+
     private String notifyUrl;
 
     private Integer notifyCount;

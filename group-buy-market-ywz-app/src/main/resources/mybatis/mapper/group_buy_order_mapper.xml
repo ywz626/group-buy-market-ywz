@@ -13,6 +13,8 @@
         <result column="pay_price" property="payPrice"/>
         <result column="target_count" property="targetCount"/>
         <result column="complete_count" property="completeCount"/>
+        <result column="notify_type" property="notifyType"/>
+        <result column="notify_url" property="notifyUrl"/>
         <result column="lock_count" property="lockCount"/>
         <result column="status" property="status"/>
         <result column="create_time" property="createTime"/>
