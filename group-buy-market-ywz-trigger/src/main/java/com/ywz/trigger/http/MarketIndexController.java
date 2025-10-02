@@ -36,6 +36,20 @@ public class MarketIndexController implements IMarketIndexService {
     @Resource
     private IIndexGroupBuyMarketService indexGroupBuyMarketService;
 
+    /**
+     * 查询拼团营销配置接口
+     * <p>
+     * 根据商品ID、用户ID、来源和渠道等信息，获取该商品参与的拼团活动相关营销配置，
+     * 包括优惠试算结果、队伍统计信息以及当前用户的队伍详情。
+     *
+     * @param goodsMarketRequestDTO 请求参数对象，包含以下字段：
+     *                              - goodsId: 商品ID（必填）
+     *                              - userId: 用户ID（必填）
+     *                              - source: 来源（必填）
+     *                              - channel: 渠道（必填）
+     * @return 返回拼团营销相关信息，包括商品价格信息、队伍列表及活动统计数据。
+     *         若请求参数缺失或处理异常，则返回错误码与提示信息。
+     */
     @Override
     @PostMapping("query_group_buy_market_config")
     public Response<GoodsMarketResponseDTO> queryGroupBuyMarketConfig(@RequestBody GoodsMarketRequestDTO goodsMarketRequestDTO) {
@@ -44,13 +58,16 @@ public class MarketIndexController implements IMarketIndexService {
             String userId = goodsMarketRequestDTO.getUserId();
             String source = goodsMarketRequestDTO.getSource();
             String channel = goodsMarketRequestDTO.getChannel();
+
+            // 参数校验：确保必要参数不为空
             if (StringUtils.isBlank(goodsId) || StringUtils.isBlank(userId) || StringUtils.isBlank(source) || StringUtils.isBlank(channel)) {
                 return Response.<GoodsMarketResponseDTO>builder()
                         .code(ResponseCode.ILLEGAL_PARAMETER.getCode())
                         .info(ResponseCode.ILLEGAL_PARAMETER.getInfo())
                         .build();
             }
-            // 营销优惠试算
+
+            // 营销优惠试算：根据传入的商品和用户信息计算折扣后价格
             TrialBalanceEntity trialBalanceEntity = indexGroupBuyMarketService.indexMarketTrial(MarketProductEntity.builder()
                     .userId(userId)
                     .goodsId(goodsId)
@@ -58,13 +75,14 @@ public class MarketIndexController implements IMarketIndexService {
                     .channel(channel)
                     .build());
 
-            // 获取拼团组队统计信息
+            // 获取拼团活动ID并查询该活动的整体组队统计信息
             Long activityId = trialBalanceEntity.getGroupBuyActivityDiscountVO().getActivityId();
             TeamStatisticVO teamStatisticVO = indexGroupBuyMarketService.queryGroupTeamStatistic(activityId);
 
-            // 获取队伍信息
+            // 查询当前用户所在团队的信息（最多查两个队伍）
             List<UserGroupBuyOrderDetailEntity> team = indexGroupBuyMarketService.getTeamList(activityId, userId, 1, 2);
 
+            // 构造返回给前端的队伍信息列表
             List<GoodsMarketResponseDTO.Team> teams = new ArrayList<>();
             if (null != team && !team.isEmpty()) {
                 for (UserGroupBuyOrderDetailEntity userGroupBuyOrderDetailEntity : team) {
@@ -83,6 +101,8 @@ public class MarketIndexController implements IMarketIndexService {
                     teams.add(goodsTeam);
                 }
             }
+
+            // 组装最终响应数据结构
             GoodsMarketResponseDTO goodsMarketResponseDTO = GoodsMarketResponseDTO.builder()
                     .goods(GoodsMarketResponseDTO.Goods.builder()
                             .deductionPrice(trialBalanceEntity.getDeductionPrice())
@@ -98,6 +118,7 @@ public class MarketIndexController implements IMarketIndexService {
                             .allTeamCount(teamStatisticVO.getAllTeamCount())
                             .build())
                     .build();
+
             Response<GoodsMarketResponseDTO> response = Response.<GoodsMarketResponseDTO>builder()
                     .code(ResponseCode.SUCCESS.getCode())
                     .info(ResponseCode.SUCCESS.getInfo())
@@ -117,11 +138,21 @@ public class MarketIndexController implements IMarketIndexService {
 
     }
 
+
+    /**
+     * 查询团购订单列表
+     *
+     * @param requestDTO 包含用户ID等查询条件的请求参数对象
+     * @return 返回包含订单列表信息的响应对象，其中data字段为BuyOrderListResponseDTO列表
+     */
     @Override
     @GetMapping("query_group_buy_order_list")
     public Response<List<BuyOrderListResponseDTO>> queryGroupBuyMarketOrderList(BuyOrderListRequestDTO requestDTO) {
         try {
+            // 根据用户ID查询订单列表
             List<BuyOrderListEntity> buyOrderListEntity = indexGroupBuyMarketService.queryOrderListByUserId(requestDTO.getUserId());
+
+            // 将实体对象转换为响应DTO对象
             List<BuyOrderListResponseDTO> responseData = new ArrayList<>();
             for (BuyOrderListEntity entity : buyOrderListEntity) {
                 BuyOrderListResponseDTO data = BuyOrderListResponseDTO.builder()
@@ -133,6 +164,8 @@ public class MarketIndexController implements IMarketIndexService {
                         .build();
                 responseData.add(data);
             }
+
+            // 构建成功响应结果
             Response<List<BuyOrderListResponseDTO>> response = Response.<List<BuyOrderListResponseDTO>>builder()
                     .code(ResponseCode.SUCCESS.getCode())
                     .info(ResponseCode.SUCCESS.getInfo())
@@ -143,4 +176,5 @@ public class MarketIndexController implements IMarketIndexService {
             throw new RuntimeException(e);
         }
     }
+
 }

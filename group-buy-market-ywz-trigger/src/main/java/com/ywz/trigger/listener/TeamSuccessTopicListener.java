@@ -2,6 +2,7 @@ package com.ywz.trigger.listener;
 
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.ExchangeTypes;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -22,7 +23,7 @@ public class TeamSuccessTopicListener {
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = "${spring.rabbitmq.config.producer.topic_team_success.queue}"),
-                    exchange = @Exchange(value = "${spring.rabbitmq.config.producer.exchange}"),
+                    exchange = @Exchange(value = "${spring.rabbitmq.config.producer.exchange}",type = ExchangeTypes.TOPIC),
                     key = "${spring.rabbitmq.config.producer.topic_team_success.routing_key}"
             )
     )
