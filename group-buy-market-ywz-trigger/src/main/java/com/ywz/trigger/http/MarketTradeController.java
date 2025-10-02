@@ -49,7 +49,7 @@ public class MarketTradeController implements IMarketTradeService {
     private ITradeSettlementService tradeSettlementService;
 
     /**
-     * 进行锁单操作
+     * 进行锁单操作,还包括营销试算鉴权等行为
      *
      * @param lockMarketPayOrderRequestDTO 锁单请求参数，包含用户ID、来源、渠道、商品ID、活动ID、外部交易号、拼团ID及通知配置等信息
      * @return 响应结果，包含锁单成功后的订单信息或错误码和提示信息

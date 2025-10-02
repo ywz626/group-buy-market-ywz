@@ -22,6 +22,7 @@ import com.ywz.infrastructure.dao.po.GroupBuyOrderList;
 import com.ywz.infrastructure.dao.po.NotifyTask;
 import com.ywz.infrastructure.dcc.DCCService;
 import com.ywz.infrastructure.event.EventPublisher;
+import com.ywz.infrastructure.redis.RedissonService;
 import com.ywz.types.enums.ActivityStatusEnumVO;
 import com.ywz.types.enums.GroupBuyOrderEnumVO;
 import com.ywz.types.enums.ResponseCode;
@@ -29,6 +30,8 @@ import com.ywz.types.exception.AppException;
 import jodd.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Repository;
@@ -37,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author 于汶泽
@@ -59,6 +63,8 @@ public class TradeRepository implements ITradeRepository {
     private DCCService dccService;
     @Value("${spring.rabbitmq.config.producer.topic_team_success.routing_key}")
     private String routingKey;
+    @Autowired
+    private RedissonService redissonService;
 
 
     /**
@@ -475,6 +481,32 @@ public class TradeRepository implements ITradeRepository {
         return notifyTaskDao.update(Wrappers.<NotifyTask>lambdaUpdate()
                 .setSql("notify_count = notify_count + 1,notify_status = 2")
                 .eq(NotifyTask::getTeamId, teamId));
+    }
+
+    @Override
+    public boolean occupyTeamStock(String teamStockKey, String recoveryTeamStockKey, Integer targetCount, Integer validTime) {
+        Long recoveryTeamStockCount = redissonService.getAtomicLong(recoveryTeamStockKey);
+        recoveryTeamStockCount = null == recoveryTeamStockCount ? 0 : recoveryTeamStockCount;
+        long occupyCount = redissonService.incr(teamStockKey) + 1;
+        if(occupyCount > recoveryTeamStockCount + targetCount){
+            log.error("放入库存失败,拼团人数已满");
+            return false;
+        }
+        String lockKey = teamStockKey + Constants.UNDERLINE + occupyCount;
+
+        Boolean lock = redissonService.setNx(lockKey, validTime + 60, TimeUnit.MINUTES);
+        if(!lock){
+            log.error("放入库存失败,锁已存在:{}",lockKey);
+        }
+        return lock;
+    }
+
+    @Override
+    public void recoveryTeamStock(String recoveryTeamStockKey) {
+        if(StringUtils.isBlank(recoveryTeamStockKey)){
+            return;
+        }
+        redissonService.incr(recoveryTeamStockKey);
     }
 
     /**

@@ -22,6 +22,14 @@ public class SCRuleFilter implements ILogicLinkHandler<TradeSettlementRuleComman
     @Resource
     private ITradeRepository repository;
 
+    /**
+     * 应用黑名单过滤规则
+     *
+     * @param requestParameter 交易结算规则命令实体，包含源和渠道等信息
+     * @param dynamicContext 动态上下文环境
+     * @return 过滤后的交易结算规则过滤器返回实体
+     * @throws Exception 当处理过程中发生异常时抛出
+     */
     @Override
     public TradeSettlementRuleFilterBackEntity apply(TradeSettlementRuleCommandEntity requestParameter, TradeSettlementRuleFilterFactory.DynamicContext dynamicContext) throws Exception {
         // 进行过滤黑名单操作
@@ -33,4 +41,5 @@ public class SCRuleFilter implements ILogicLinkHandler<TradeSettlementRuleComman
         }
         return next(requestParameter, dynamicContext);
     }
+
 }

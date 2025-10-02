@@ -23,15 +23,26 @@ public class OutTradeNoRuleFilter implements ILogicLinkHandler<TradeSettlementRu
     @Resource
     private ITradeRepository repository;
 
+    /**
+     * 应用交易结算规则过滤器，根据外部交易单号查询市场支付订单信息
+     *
+     * @param requestParameter 交易结算规则命令实体，包含用户ID和外部交易单号等信息
+     * @param dynamicContext 动态上下文环境，用于在过滤器链中传递数据
+     * @return TradeSettlementRuleFilterBackEntity 交易结算规则过滤器返回实体
+     * @throws Exception 当查询过程中发生异常时抛出
+     */
     @Override
     public TradeSettlementRuleFilterBackEntity apply(TradeSettlementRuleCommandEntity requestParameter, TradeSettlementRuleFilterFactory.DynamicContext dynamicContext) throws Exception {
+        // 根据用户ID和外部交易单号查询市场锁定订单信息
         MarketPayOrderEntity marketPayOrderEntity = repository.queryMarketLockOrderByOutTradeNo(requestParameter.getUserId(), requestParameter.getOutTradeNo());
         if (marketPayOrderEntity == null) {
             // 外部交易单号不存在
             throw new AppException(ResponseCode.E0104);
         }
+        // 将查询到的市场支付订单实体设置到动态上下文中
         dynamicContext.setMarketPayOrderEntity(marketPayOrderEntity);
-        // 存在该外部交易单号
+        // 存在该外部交易单号，继续执行下一个过滤器
         return next(requestParameter,dynamicContext);
     }
+
 }

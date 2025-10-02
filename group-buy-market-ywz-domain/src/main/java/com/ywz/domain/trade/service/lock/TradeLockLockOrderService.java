@@ -66,6 +66,7 @@ public class TradeLockLockOrderService implements ITradeLockOrderService {
         TradeLockRuleCommandEntity tradeRuleCommand = TradeLockRuleCommandEntity.builder()
                 .activityId(payActivityEntity.getActivityId())
                 .userId(userEntity.getUserId())
+                .teamId(payActivityEntity.getTeamId())
                 .build();
 
         // 执行交易规则过滤器链处理
@@ -84,7 +85,11 @@ public class TradeLockLockOrderService implements ITradeLockOrderService {
 
         // 持久化订单锁定操作
         // 通过仓储层执行市场支付订单的最终锁定
-        return tradeRepository.lockMarketPayOrder(groupBuyOrderAggregate);
+        try {
+            return tradeRepository.lockMarketPayOrder(groupBuyOrderAggregate);
+        } catch (Exception e) {
+            tradeRepository.recoveryTeamStock(tradeBackEntity.getRecoveryTeamStockKey());
+            throw e;
+        }
     }
-
 }
