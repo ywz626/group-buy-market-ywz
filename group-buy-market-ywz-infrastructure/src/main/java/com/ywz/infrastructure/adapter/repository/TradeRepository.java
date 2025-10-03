@@ -483,31 +483,58 @@ public class TradeRepository implements ITradeRepository {
                 .eq(NotifyTask::getTeamId, teamId));
     }
 
+        /**
+     * 占用团队库存
+     * @param teamStockKey 团队库存键名
+     * @param recoveryTeamStockKey 恢复团队库存键名
+     * @param targetCount 目标数量
+     * @param validTime 有效时间
+     * @return 占用成功返回true，否则返回false
+     */
     @Override
     public boolean occupyTeamStock(String teamStockKey, String recoveryTeamStockKey, Integer targetCount, Integer validTime) {
+        // 获取恢复团队库存数量
         Long recoveryTeamStockCount = redissonService.getAtomicLong(recoveryTeamStockKey);
         recoveryTeamStockCount = null == recoveryTeamStockCount ? 0 : recoveryTeamStockCount;
+
+        // 增加占用计数
         long occupyCount = redissonService.incr(teamStockKey) + 1;
+
+        // 检查是否超过库存限制
         if(occupyCount > recoveryTeamStockCount + targetCount){
             log.error("放入库存失败,拼团人数已满");
+            redissonService.setAtomicLong(teamStockKey,targetCount);
             return false;
         }
-        String lockKey = teamStockKey + Constants.UNDERLINE + occupyCount;
 
+        // 创建锁键并尝试获取锁
+        String lockKey = teamStockKey + Constants.UNDERLINE + occupyCount;
         Boolean lock = redissonService.setNx(lockKey, validTime + 60, TimeUnit.MINUTES);
+
+        // 记录锁获取失败日志
         if(!lock){
             log.error("放入库存失败,锁已存在:{}",lockKey);
         }
+
         return lock;
     }
 
+
+    /**
+     * 恢复团队库存
+     *
+     * @param recoveryTeamStockKey 团队库存恢复的Redis键名，用于标识需要恢复库存的具体团队商品
+     */
     @Override
     public void recoveryTeamStock(String recoveryTeamStockKey) {
+        // 如果恢复键名为空或空白字符串，则直接返回不执行任何操作
         if(StringUtils.isBlank(recoveryTeamStockKey)){
             return;
         }
+        // 对指定的Redis键进行自增操作，实现库存数量的恢复
         redissonService.incr(recoveryTeamStockKey);
     }
+
 
     /**
      * 获取回调任务列表
