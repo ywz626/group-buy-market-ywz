@@ -1,6 +1,6 @@
 package com.ywz.infrastructure.dcc;
 
-import com.ywz.types.annotations.DCCValue;
+import cn.bugstack.wrench.dynamic.config.center.types.annotations.DCCValue;
 import com.ywz.types.common.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

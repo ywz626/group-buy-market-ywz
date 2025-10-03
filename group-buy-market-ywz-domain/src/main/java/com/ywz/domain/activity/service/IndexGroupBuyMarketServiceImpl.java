@@ -1,5 +1,6 @@
 package com.ywz.domain.activity.service;
 
+import cn.bugstack.wrench.design.framework.tree.StrategyHandler;
 import com.ywz.domain.activity.adapter.repository.IActivityRepository;
 import com.ywz.domain.activity.model.entity.BuyOrderListEntity;
 import com.ywz.domain.activity.model.entity.MarketProductEntity;
@@ -7,7 +8,6 @@ import com.ywz.domain.activity.model.entity.TrialBalanceEntity;
 import com.ywz.domain.activity.model.entity.UserGroupBuyOrderDetailEntity;
 import com.ywz.domain.activity.model.valobj.TeamStatisticVO;
 import com.ywz.domain.activity.service.trial.factory.DefaultActivityStrategyFactory;
-import com.ywz.types.design.framework.tree.StrategyHandler;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;

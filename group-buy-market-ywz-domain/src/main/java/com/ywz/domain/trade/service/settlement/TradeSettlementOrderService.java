@@ -1,5 +1,6 @@
 package com.ywz.domain.trade.service.settlement;
 
+import cn.bugstack.wrench.design.framework.link.model2.chain.BusinessLinkedList;
 import com.alibaba.fastjson.JSON;
 import com.ywz.domain.trade.adapter.port.ITradePort;
 import com.ywz.domain.trade.adapter.repository.ITradeRepository;
@@ -8,7 +9,6 @@ import com.ywz.domain.trade.model.entity.*;
 import com.ywz.domain.trade.model.valobj.NotifyConfigVO;
 import com.ywz.domain.trade.service.ITradeSettlementService;
 import com.ywz.domain.trade.service.settlement.factory.TradeSettlementRuleFilterFactory;
-import com.ywz.types.design.framework.link.model2.chain.BusinessLinkedList;
 import com.ywz.types.enums.NotifyTaskHTTPEnumVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

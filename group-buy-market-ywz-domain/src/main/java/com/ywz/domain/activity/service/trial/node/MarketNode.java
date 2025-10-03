@@ -1,7 +1,7 @@
 package com.ywz.domain.activity.service.trial.node;
 
+import cn.bugstack.wrench.design.framework.tree.StrategyHandler;
 import com.alibaba.fastjson.JSON;
-import com.ywz.domain.activity.adapter.repository.IActivityRepository;
 import com.ywz.domain.activity.model.entity.MarketProductEntity;
 import com.ywz.domain.activity.model.entity.TrialBalanceEntity;
 import com.ywz.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
@@ -11,9 +11,7 @@ import com.ywz.domain.activity.service.trial.AbstractGroupBuyMarketSupport;
 import com.ywz.domain.activity.service.trial.factory.DefaultActivityStrategyFactory;
 import com.ywz.domain.activity.service.trial.thread.QueryGroupBuyActivityDiscountVOThreadTask;
 import com.ywz.domain.activity.service.trial.thread.QuerySkuVOFromDBThreadTask;
-import com.ywz.types.design.framework.tree.StrategyHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

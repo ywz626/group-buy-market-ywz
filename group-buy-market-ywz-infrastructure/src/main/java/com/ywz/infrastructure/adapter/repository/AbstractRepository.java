@@ -78,7 +78,7 @@ public abstract class AbstractRepository {
                 T dbValue = dbSupplier.get();
                 if (dbValue == null) {
                     // 数据库中也没有数据，设置空值标记到缓存中
-                    redissonService.setValue(key, Constants.GROUP_BUY_MARKET_NULL, 5000);
+                    redissonService.setValue(key, Constants.GROUP_BUY_MARKET_NULL, 10 * 60 * 1000);
                     return null;
                 }
 

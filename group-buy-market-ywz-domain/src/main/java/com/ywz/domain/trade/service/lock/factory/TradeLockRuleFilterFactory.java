@@ -1,13 +1,13 @@
 package com.ywz.domain.trade.service.lock.factory;
 
+import cn.bugstack.wrench.design.framework.link.model2.LinkArmory;
+import cn.bugstack.wrench.design.framework.link.model2.chain.BusinessLinkedList;
 import com.ywz.domain.trade.model.entity.GroupBuyActivityEntity;
 import com.ywz.domain.trade.model.entity.TradeLockRuleCommandEntity;
 import com.ywz.domain.trade.model.entity.TradeLockRuleFilterBackEntity;
 import com.ywz.domain.trade.service.lock.filter.ActivityUsabilityRuleFilter;
 import com.ywz.domain.trade.service.lock.filter.TeamStockOccupyRuleFilter;
 import com.ywz.domain.trade.service.lock.filter.UserTakeLimitRuleFilter;
-import com.ywz.types.design.framework.link.model2.LinkArmory;
-import com.ywz.types.design.framework.link.model2.chain.BusinessLinkedList;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,13 +33,13 @@ public class TradeLockRuleFilterFactory {
      * @return 交易锁单规则过滤链，包含活动可用性、用户领取限制和团队库存占用的业务逻辑处理
      */
     @Bean("tradeLockRuleFilter")
-    public BusinessLinkedList<TradeLockRuleCommandEntity, TradeLockRuleFilterFactory.DynamicContext, TradeLockRuleFilterBackEntity> tradeRuleFilter(
+    public BusinessLinkedList<TradeLockRuleCommandEntity, DynamicContext, TradeLockRuleFilterBackEntity> tradeRuleFilter(
             ActivityUsabilityRuleFilter activityUsabilityRuleFilter, UserTakeLimitRuleFilter userTakeLimitRuleFilter, TeamStockOccupyRuleFilter teamStockOccupyRuleFilter
             ) {
         // 创建链接器工厂，初始化交易锁单规则过滤链
         LinkArmory<TradeLockRuleCommandEntity, DynamicContext, TradeLockRuleFilterBackEntity> linkArmory = new LinkArmory<>("交易锁单规则过滤链"
                 , activityUsabilityRuleFilter, userTakeLimitRuleFilter,teamStockOccupyRuleFilter);
-        return linkArmory.getBusinessLinkedList();
+        return linkArmory.getLogicLink();
     }
 
 

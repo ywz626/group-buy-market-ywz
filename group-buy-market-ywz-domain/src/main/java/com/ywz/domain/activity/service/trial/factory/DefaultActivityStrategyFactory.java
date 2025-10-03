@@ -1,11 +1,11 @@
 package com.ywz.domain.activity.service.trial.factory;
 
+import cn.bugstack.wrench.design.framework.tree.StrategyHandler;
 import com.ywz.domain.activity.model.entity.MarketProductEntity;
 import com.ywz.domain.activity.model.entity.TrialBalanceEntity;
 import com.ywz.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
 import com.ywz.domain.activity.model.valobj.SkuVO;
 import com.ywz.domain.activity.service.trial.node.RootNode;
-import com.ywz.types.design.framework.tree.StrategyHandler;
 import lombok.*;
 import org.springframework.stereotype.Component;
 

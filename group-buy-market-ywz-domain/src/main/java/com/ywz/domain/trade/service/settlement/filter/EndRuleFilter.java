@@ -1,11 +1,10 @@
 package com.ywz.domain.trade.service.settlement.filter;
 
+import cn.bugstack.wrench.design.framework.link.model2.handler.ILogicHandler;
 import com.ywz.domain.trade.model.entity.GroupBuyTeamEntity;
-import com.ywz.domain.trade.model.entity.MarketPayOrderEntity;
 import com.ywz.domain.trade.model.entity.TradeSettlementRuleCommandEntity;
 import com.ywz.domain.trade.model.entity.TradeSettlementRuleFilterBackEntity;
 import com.ywz.domain.trade.service.settlement.factory.TradeSettlementRuleFilterFactory;
-import com.ywz.types.design.framework.link.model2.handler.ILogicLinkHandler;
 import org.springframework.stereotype.Service;
 
 /**
@@ -14,7 +13,7 @@ import org.springframework.stereotype.Service;
  * @DateTime: 2025/6/5 15:13
  */
 @Service
-public class EndRuleFilter implements ILogicLinkHandler<TradeSettlementRuleCommandEntity, TradeSettlementRuleFilterFactory.DynamicContext, TradeSettlementRuleFilterBackEntity> {
+public class EndRuleFilter implements ILogicHandler<TradeSettlementRuleCommandEntity, TradeSettlementRuleFilterFactory.DynamicContext, TradeSettlementRuleFilterBackEntity> {
     /**
      * 应用团购团队信息到结算规则过滤器返回实体
      *

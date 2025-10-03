@@ -30,9 +30,16 @@ public class QueryGroupBuyActivityDiscountVOThreadTask implements Callable<Group
     }
 
 
+    /**
+     * 执行团购活动折扣信息查询任务
+     *
+     * @return GroupBuyActivityDiscountVO 团购活动折扣信息对象，如果未找到对应活动则返回null
+     * @throws Exception 执行过程中可能抛出的异常
+     */
     @Override
     public GroupBuyActivityDiscountVO call() throws Exception {
         Long scSkuActivityId = activityId;
+        // 如果activityId为空，则通过source、channel、goodsId查询活动信息
         if(scSkuActivityId == null){
             ScSkuActivityVO scSkuActivityVO = activityRepository.queryScSkuActivityVO(source, channel, goodsId);
             if(scSkuActivityVO == null) {
@@ -40,7 +47,8 @@ public class QueryGroupBuyActivityDiscountVOThreadTask implements Callable<Group
             }
             scSkuActivityId = scSkuActivityVO.getActivityId();
         }
-        GroupBuyActivityDiscountVO groupBuyActivityDiscountVO = activityRepository.queryGroupBuyActivityDiscountVO(scSkuActivityId);
-        return groupBuyActivityDiscountVO;
+        // 根据活动ID查询团购活动折扣信息
+        return activityRepository.queryGroupBuyActivityDiscountVO(scSkuActivityId);
     }
+
 }

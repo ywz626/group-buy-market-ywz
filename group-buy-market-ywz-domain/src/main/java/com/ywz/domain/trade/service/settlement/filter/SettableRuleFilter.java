@@ -1,9 +1,9 @@
 package com.ywz.domain.trade.service.settlement.filter;
 
+import cn.bugstack.wrench.design.framework.link.model2.handler.ILogicHandler;
 import com.ywz.domain.trade.adapter.repository.ITradeRepository;
 import com.ywz.domain.trade.model.entity.*;
 import com.ywz.domain.trade.service.settlement.factory.TradeSettlementRuleFilterFactory;
-import com.ywz.types.design.framework.link.model2.handler.ILogicLinkHandler;
 import com.ywz.types.enums.ResponseCode;
 import com.ywz.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import java.util.Date;
  */
 @Service
 @Slf4j
-public class SettableRuleFilter implements ILogicLinkHandler<TradeSettlementRuleCommandEntity, TradeSettlementRuleFilterFactory.DynamicContext, TradeSettlementRuleFilterBackEntity> {
+public class SettableRuleFilter implements ILogicHandler<TradeSettlementRuleCommandEntity, TradeSettlementRuleFilterFactory.DynamicContext, TradeSettlementRuleFilterBackEntity> {
 
     @Resource
     private ITradeRepository repository;

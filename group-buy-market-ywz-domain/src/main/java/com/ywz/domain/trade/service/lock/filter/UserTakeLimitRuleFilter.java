@@ -1,11 +1,11 @@
 package com.ywz.domain.trade.service.lock.filter;
 
+import cn.bugstack.wrench.design.framework.link.model2.handler.ILogicHandler;
 import com.ywz.domain.trade.adapter.repository.ITradeRepository;
 import com.ywz.domain.trade.model.entity.GroupBuyActivityEntity;
 import com.ywz.domain.trade.model.entity.TradeLockRuleCommandEntity;
 import com.ywz.domain.trade.model.entity.TradeLockRuleFilterBackEntity;
 import com.ywz.domain.trade.service.lock.factory.TradeLockRuleFilterFactory;
-import com.ywz.types.design.framework.link.model2.handler.ILogicLinkHandler;
 import com.ywz.types.enums.ResponseCode;
 import com.ywz.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ import javax.annotation.Resource;
  */
 @Slf4j
 @Service
-public class UserTakeLimitRuleFilter implements ILogicLinkHandler<TradeLockRuleCommandEntity, TradeLockRuleFilterFactory.DynamicContext, TradeLockRuleFilterBackEntity> {
+public class UserTakeLimitRuleFilter implements ILogicHandler<TradeLockRuleCommandEntity, TradeLockRuleFilterFactory.DynamicContext, TradeLockRuleFilterBackEntity> {
 
     @Resource
     private ITradeRepository repository;

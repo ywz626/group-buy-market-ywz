@@ -1,10 +1,10 @@
 package com.ywz.domain.trade.service.settlement.filter;
 
+import cn.bugstack.wrench.design.framework.link.model2.handler.ILogicHandler;
 import com.ywz.domain.trade.adapter.repository.ITradeRepository;
 import com.ywz.domain.trade.model.entity.TradeSettlementRuleCommandEntity;
 import com.ywz.domain.trade.model.entity.TradeSettlementRuleFilterBackEntity;
 import com.ywz.domain.trade.service.settlement.factory.TradeSettlementRuleFilterFactory;
-import com.ywz.types.design.framework.link.model2.handler.ILogicLinkHandler;
 import com.ywz.types.enums.ResponseCode;
 import com.ywz.types.exception.AppException;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ import javax.annotation.Resource;
  * @DateTime: 2025/6/5 14:46
  */
 @Service
-public class SCRuleFilter implements ILogicLinkHandler<TradeSettlementRuleCommandEntity, TradeSettlementRuleFilterFactory.DynamicContext, TradeSettlementRuleFilterBackEntity> {
+public class SCRuleFilter implements ILogicHandler<TradeSettlementRuleCommandEntity, TradeSettlementRuleFilterFactory.DynamicContext, TradeSettlementRuleFilterBackEntity> {
 
     @Resource
     private ITradeRepository repository;
