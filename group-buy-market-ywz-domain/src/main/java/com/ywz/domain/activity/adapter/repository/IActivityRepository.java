@@ -4,6 +4,7 @@ package com.ywz.domain.activity.adapter.repository;
 import com.ywz.domain.activity.model.entity.BuyOrderListEntity;
 import com.ywz.domain.activity.model.entity.UserGroupBuyOrderDetailEntity;
 import com.ywz.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
+import com.ywz.domain.activity.model.valobj.ScSkuActivityVO;
 import com.ywz.domain.activity.model.valobj.SkuVO;
 import com.ywz.domain.activity.model.valobj.TeamStatisticVO;
 
@@ -16,14 +17,11 @@ import java.util.List;
  */
 public interface IActivityRepository {
 
-    /**
-     * 查询拼团活动营销配置
-     *
-     * @param source 渠道
-     * @param channel 来源
-     * @return GroupBuyActivityDiscountVO
-     */
-    GroupBuyActivityDiscountVO queryGroupBuyActivityDiscountVO(String source, String channel,String goodsId);
+    ScSkuActivityVO queryScSkuActivityVO(String source,String chanel,String goodsId);
+
+
+
+    GroupBuyActivityDiscountVO queryGroupBuyActivityDiscountVO(Long activityId);
 
     /**
      * 根据商品ID查询商品信息

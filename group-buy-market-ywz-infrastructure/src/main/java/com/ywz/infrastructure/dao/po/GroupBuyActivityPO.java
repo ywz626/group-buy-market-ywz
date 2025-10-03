@@ -102,4 +102,8 @@ public class GroupBuyActivityPO {
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
+
+    public static String getCacheRedisKey(Long activityId){
+        return "group_buy_activity_com.ywz.infrastructure.dao.po.GroupBuyActivityPO_" + activityId;
+    }
 }

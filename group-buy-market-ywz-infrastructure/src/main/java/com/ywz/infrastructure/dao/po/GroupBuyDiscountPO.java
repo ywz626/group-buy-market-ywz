@@ -29,7 +29,7 @@ public class GroupBuyDiscountPO {
     /**
      * 折扣ID
      */
-    private Integer discountId;
+    private String discountId;
 
     /**
      * 折扣标题
@@ -71,4 +71,8 @@ public class GroupBuyDiscountPO {
      * 更新时间
      */
     private LocalDateTime updateTime;
+
+    public static String getDiscountCacheRedisKey(Long activityId){
+        return "group_buy_discount_com.ywz.infrastructure.dao.po.GroupBuyDiscountPO_" + activityId;
+    }
 }

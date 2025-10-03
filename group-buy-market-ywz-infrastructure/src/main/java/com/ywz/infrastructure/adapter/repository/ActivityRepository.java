@@ -5,6 +5,7 @@ import com.ywz.domain.activity.adapter.repository.IActivityRepository;
 import com.ywz.domain.activity.model.entity.BuyOrderListEntity;
 import com.ywz.domain.activity.model.entity.UserGroupBuyOrderDetailEntity;
 import com.ywz.domain.activity.model.valobj.GroupBuyActivityDiscountVO;
+import com.ywz.domain.activity.model.valobj.ScSkuActivityVO;
 import com.ywz.domain.activity.model.valobj.SkuVO;
 import com.ywz.domain.activity.model.valobj.TeamStatisticVO;
 import com.ywz.infrastructure.dao.*;
@@ -28,7 +29,8 @@ import java.util.stream.Collectors;
  */
 @Repository
 @Slf4j
-public class ActivityRepository implements IActivityRepository {
+public class ActivityRepository extends AbstractRepository implements IActivityRepository {
+
 
     @Resource
     private IGroupBuyActivityDao groupBuyActivityDao;
@@ -47,29 +49,65 @@ public class ActivityRepository implements IActivityRepository {
     @Resource
     private DCCService dccService;
 
+    /**
+     * 根据来源、渠道和商品ID查询SKU活动信息
+     *
+     * @param source 来源
+     * @param chanel 渠道
+     * @param goodsId 商品ID
+     * @return ScSkuActivityVO对象，包含活动信息；如果未找到对应记录则返回null
+     */
     @Override
-    public GroupBuyActivityDiscountVO queryGroupBuyActivityDiscountVO(String source, String channel, String goodsId) {
+    public ScSkuActivityVO queryScSkuActivityVO(String source, String chanel, String goodsId) {
+        // 根据条件查询SKU活动记录，按ID倒序排列取第一条
         ScSkuActivity scSkuActivity = scSkuActivityDao.selectOne(Wrappers.<ScSkuActivity>lambdaQuery()
                 .eq(ScSkuActivity::getSource, source)
-                .eq(ScSkuActivity::getChannel, channel)
+                .eq(ScSkuActivity::getChannel, chanel)
                 .eq(ScSkuActivity::getGoodsId, goodsId)
                 .orderByDesc(ScSkuActivity::getId));
 
         if (scSkuActivity == null) {
             return null;
         }
-        GroupBuyActivityPO groupBuyActivityRes = groupBuyActivityDao.selectOne(Wrappers.<GroupBuyActivityPO>lambdaQuery()
-                .eq(GroupBuyActivityPO::getActivityId, scSkuActivity.getActivityId())
-                .orderByDesc(GroupBuyActivityPO::getId));
+        // 将查询到的实体对象转换为VO对象并返回
+        return ScSkuActivityVO.builder()
+                .source(scSkuActivity.getSource())
+                .channel(scSkuActivity.getChannel())
+                .activityId(scSkuActivity.getActivityId())
+                .goodsId(scSkuActivity.getGoodsId())
+                .build();
+    }
 
-        // 判断时间是否在活动范围内
-//        if (groupBuyActivityRes == null || groupBuyActivityRes.getStartTime().after(new Date()) || groupBuyActivityRes.getEndTime().before(new Date())) {
-//            return null;
-//        }
-        String discountId = groupBuyActivityRes.getDiscountId();
 
-        GroupBuyDiscountPO groupBuyDiscountRes = groupBuyDiscountDao.selectOne(Wrappers.<GroupBuyDiscountPO>lambdaQuery()
-                .eq(GroupBuyDiscountPO::getDiscountId, discountId));
+    /**
+     * 根据活动ID查询拼团活动及其关联的优惠信息，并封装为GroupBuyActivityDiscountVO对象返回。
+     * <p>
+     * 该方法首先从缓存或数据库中获取指定ID的拼团活动信息（GroupBuyActivityPO），
+     * 然后根据活动信息中的优惠ID，再次从缓存或数据库中获取对应的优惠详情（GroupBuyDiscountPO），
+     * 最终将两者数据整合构建为GroupBuyActivityDiscountVO对象返回。
+     * 若任一环节未查询到有效数据，则直接返回null。
+     *
+     * @param activityId 拼团活动ID，用于查询活动及优惠信息
+     * @return GroupBuyActivityDiscountVO对象，包含活动信息和优惠详情；若查询不到相关信息则返回null
+     */
+    @Override
+    public GroupBuyActivityDiscountVO queryGroupBuyActivityDiscountVO(Long activityId) {
+        // 查询拼团活动信息：优先从缓存获取，缓存未命中则查询数据库
+        GroupBuyActivityPO groupBuyActivityRes = getFromCacheOrDb(GroupBuyActivityPO.getCacheRedisKey(activityId), () -> groupBuyActivityDao.selectOne(Wrappers.<GroupBuyActivityPO>lambdaQuery()
+                .eq(GroupBuyActivityPO::getActivityId, activityId)
+                .eq(GroupBuyActivityPO::getStatus,1)));
+        if (groupBuyActivityRes == null) {
+            return null;
+        }
+
+        // 查询拼团优惠信息：基于活动信息中的discountId，优先从缓存获取，缓存未命中则查询数据库
+        GroupBuyDiscountPO groupBuyDiscountRes = getFromCacheOrDb(GroupBuyDiscountPO.getDiscountCacheRedisKey(activityId), () -> groupBuyDiscountDao.selectOne(Wrappers.<GroupBuyDiscountPO>lambdaQuery()
+                .eq(GroupBuyDiscountPO::getDiscountId, groupBuyActivityRes.getDiscountId())));
+        if (groupBuyDiscountRes == null) {
+            return null;
+        }
+
+        // 构建优惠信息部分VO对象
         GroupBuyActivityDiscountVO.GroupBuyDiscount groupBuyDiscount = GroupBuyActivityDiscountVO.GroupBuyDiscount.builder()
                 .discountName(groupBuyDiscountRes.getDiscountName())
                 .discountDesc(groupBuyDiscountRes.getDiscountDesc())
@@ -79,12 +117,10 @@ public class ActivityRepository implements IActivityRepository {
                 .tagId(groupBuyDiscountRes.getTagId())
                 .build();
 
+        // 构建并返回完整的活动优惠VO对象
         return GroupBuyActivityDiscountVO.builder()
                 .activityId(groupBuyActivityRes.getActivityId())
                 .activityName(groupBuyActivityRes.getActivityName())
-                .source(scSkuActivity.getSource())
-                .channel(scSkuActivity.getChannel())
-                .goodsId(scSkuActivity.getGoodsId())
                 .groupBuyDiscount(groupBuyDiscount)
                 .groupType(groupBuyActivityRes.getGroupType())
                 .takeLimitCount(groupBuyActivityRes.getTakeLimitCount())
@@ -97,6 +133,7 @@ public class ActivityRepository implements IActivityRepository {
                 .tagScope(groupBuyActivityRes.getTagScope())
                 .build();
     }
+
 
     @Override
     public SkuVO querySkuByGoodsId(String goodsId) {
@@ -158,7 +195,7 @@ public class ActivityRepository implements IActivityRepository {
         //  根据自己拼团订单id列表 查询拼团订单信息 ;这里不直接使用activityId从groupBuyOrderDao查询是因为groupBuyOrder中没有userId字段
         // 整合数据
         List<UserGroupBuyOrderDetailEntity> userGroupBuyOrderDetailEntities = getUserGroupBuyOrderDetailEntities(groupBuyOrderLists);
-        if(userGroupBuyOrderDetailEntities == null || userGroupBuyOrderDetailEntities.isEmpty()) {
+        if (userGroupBuyOrderDetailEntities == null || userGroupBuyOrderDetailEntities.isEmpty()) {
             return null;
         }
         return userGroupBuyOrderDetailEntities;
@@ -189,7 +226,7 @@ public class ActivityRepository implements IActivityRepository {
     @Override
     public List<BuyOrderListEntity> queryBuyOrderListByUserId(String userId) {
         List<GroupBuyOrderList> groupBuyOrderLists = groupBuyOrderListDao.selectList(Wrappers.<GroupBuyOrderList>lambdaQuery()
-                .eq(GroupBuyOrderList::getUserId, userId))
+                        .eq(GroupBuyOrderList::getUserId, userId))
                 .stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -205,17 +242,18 @@ public class ActivityRepository implements IActivityRepository {
                     .outTradeNo(groupBuyOrderList.getOutTradeNo())
                     .build();
             Integer status = groupBuyOrderList.getStatus();
-            if(status == 0){
+            if (status == 0) {
                 buyOrderListEntity.setStatus(0);
                 buyOrderListEntity.setUserNo(null);
-            }if(status == 1){
+            }
+            if (status == 1) {
                 GroupBuyOrder groupBuyOrder = groupBuyOrderDao.selectOne(Wrappers.<GroupBuyOrder>lambdaQuery()
                         .eq(GroupBuyOrder::getTeamId, groupBuyOrderList.getTeamId())
                         .eq(GroupBuyOrder::getActivityId, groupBuyOrderList.getActivityId()));
-                if(groupBuyOrder.getStatus() == 0){
+                if (groupBuyOrder.getStatus() == 0) {
                     buyOrderListEntity.setStatus(1);
-                    buyOrderListEntity.setUserNo(groupBuyOrder.getTargetCount()- groupBuyOrder.getLockCount());
-                }else {
+                    buyOrderListEntity.setUserNo(groupBuyOrder.getTargetCount() - groupBuyOrder.getLockCount());
+                } else {
                     buyOrderListEntity.setStatus(groupBuyOrder.getStatus());
                     buyOrderListEntity.setUserNo(null);
                 }
@@ -227,15 +265,16 @@ public class ActivityRepository implements IActivityRepository {
 
     /**
      * 提取公共方法：获取用户拼团订单详情实体列表
+     *
      * @param groupBuyOrderLists
      * @return
      */
-    private  List<UserGroupBuyOrderDetailEntity> getUserGroupBuyOrderDetailEntities(List<GroupBuyOrderList> groupBuyOrderLists) {
+    private List<UserGroupBuyOrderDetailEntity> getUserGroupBuyOrderDetailEntities(List<GroupBuyOrderList> groupBuyOrderLists) {
         Set<String> teamIds = groupBuyOrderLists.stream()
                 .map(GroupBuyOrderList::getTeamId)
                 .filter(teamId -> teamId != null && !teamId.isEmpty())
                 .collect(Collectors.toSet());
-        if( teamIds.isEmpty()) {
+        if (teamIds.isEmpty()) {
             return null;
         }
         log.info("查询的teamIds：{}", teamIds);
@@ -243,7 +282,7 @@ public class ActivityRepository implements IActivityRepository {
                 .apply("target_count > lock_count")
                 .eq(GroupBuyOrder::getStatus, 0)
                 .in(GroupBuyOrder::getTeamId, teamIds));
-        if( groupBuyOrderList == null || groupBuyOrderList.isEmpty()) {
+        if (groupBuyOrderList == null || groupBuyOrderList.isEmpty()) {
             return null;
         }
         log.info("查询的拼团订单信息：{}", groupBuyOrderList);
