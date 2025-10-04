@@ -1,5 +1,6 @@
 package com.ywz.trigger.http;
 
+import cn.bugstack.wrench.dynamic.config.center.domain.model.valobj.AttributeVO;
 import com.ywz.api.IDCCService;
 import com.ywz.api.response.Response;
 import com.ywz.types.enums.ResponseCode;
@@ -19,7 +20,7 @@ import javax.annotation.Resource;
 @CrossOrigin("*")
 @RequestMapping("/api/v1/gbm/dcc/")
 public class DCCController implements IDCCService {
-    @Resource
+    @Resource(name = "dynamicConfigCenterRedisTopic")
     private RTopic dccTopic;
 
     /**
@@ -27,13 +28,14 @@ public class DCCController implements IDCCService {
      * <p>
      * curl <a href="http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=downgradeSwitch&value=1">...</a>
      * curl <a href="http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=cutRange&value=0">...</a>
+     * curl <a href="http://127.0.0.1:8091/api/v1/gbm/dcc/update_config?key=rateLimiterSwitch&value=close">...</a>
      */
     @RequestMapping(value = "update_config", method = RequestMethod.GET)
     @Override
     public Response<Boolean> updateConfig(@RequestParam String key, @RequestParam String value) {
         try {
             log.info("DCC 动态配置值变更 key:{} value:{}", key, value);
-            dccTopic.publish(key + "," + value);
+            dccTopic.publish(new AttributeVO(key, value));
             return Response.<Boolean>builder()
                     .code(ResponseCode.SUCCESS.getCode())
                     .info(ResponseCode.SUCCESS.getInfo())

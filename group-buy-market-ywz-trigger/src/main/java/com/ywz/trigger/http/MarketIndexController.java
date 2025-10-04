@@ -1,5 +1,6 @@
 package com.ywz.trigger.http;
 
+import cn.bugstack.wrench.rate.limiter.types.annotations.RateLimiterAccessInterceptor;
 import com.alibaba.fastjson.JSON;
 import com.ywz.api.IMarketIndexService;
 import com.ywz.api.dto.BuyOrderListRequestDTO;
@@ -51,6 +52,7 @@ public class MarketIndexController implements IMarketIndexService {
      *         若请求参数缺失或处理异常，则返回错误码与提示信息。
      */
     @Override
+    @RateLimiterAccessInterceptor(key = "userId", fallbackMethod = "queryGroupBuyMarketConfigFallBack", permitsPerSecond = 1.0d, blacklistCount = 1)
     @PostMapping("query_group_buy_market_config")
     public Response<GoodsMarketResponseDTO> queryGroupBuyMarketConfig(@RequestBody GoodsMarketRequestDTO goodsMarketRequestDTO) {
         try {
@@ -137,6 +139,24 @@ public class MarketIndexController implements IMarketIndexService {
         }
 
     }
+
+        /**
+     * 查询拼团营销配置的降级处理方法
+     * 当查询拼团营销配置接口触发限流时，会调用此降级方法返回限流响应
+     *
+     * @param requestDTO 商品营销请求参数对象，包含用户ID等信息
+     * @return 返回限流响应结果，包含限流错误码和错误信息
+     */
+    public Response<GoodsMarketResponseDTO> queryGroupBuyMarketConfigFallBack(@RequestBody GoodsMarketRequestDTO requestDTO) {
+        // 记录限流错误日志，输出触发限流的用户ID
+        log.error("查询拼团营销配置限流:{}", requestDTO.getUserId());
+        // 构建限流响应结果
+        return Response.<GoodsMarketResponseDTO>builder()
+                .code(ResponseCode.RATE_LIMITER.getCode())
+                .info(ResponseCode.RATE_LIMITER.getInfo())
+                .build();
+    }
+
 
 
     /**
